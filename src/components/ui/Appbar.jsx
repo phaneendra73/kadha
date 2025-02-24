@@ -33,14 +33,14 @@ const Appbar = () => {
     <Box
       as='nav'
       position='fixed'
-      top='20px'
+      top='1rem'
       left='0'
       right='0'
       zIndex='1000'
       bg={'rgba(0, 0, 0, 0)'}
       color={textColor}
       boxShadow='sm'
-      p='1rem'
+      p='0.5rem'
       backdropFilter='blur(8px)'
       width={{ base: '100%', md: '80%' }}
       mx='auto'

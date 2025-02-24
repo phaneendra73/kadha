@@ -8,6 +8,7 @@ import {
   Tag,
   HStack,
 } from '@chakra-ui/react';
+import Appbar from '../components/ui/Appbar';
 import axios from 'axios';
 const fetchPosts = async () => {
   const config = {
@@ -46,6 +47,7 @@ const BlogPosts = () => {
   if (loading) {
     return (
       <>
+        <Appbar />
         <VStack colorPalette='teal' fontSize={'xl'} marginTop={50}>
           <Spinner color='colorPalette.600' />
           <Text color=''>Loading...</Text>
