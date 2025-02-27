@@ -40,3 +40,56 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Basic styling for the Hero component */
+.hero-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .hero-container {
+    height: 75vh;
+  }
+}
+
+.hero-content {
+  max-width: 1120px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+  text-align: center;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.welcome-text {
+  font-size: 1.25rem;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.main-title {
+  font-size: 4rem;
+  font-weight: bold;
+  margin: 1rem 0;
+  color: #333;
+}
+
+.hero-description {
+  font-size: 1.25rem;
+  max-width: 600px;
+  margin: 0 auto;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: lighter;
+}

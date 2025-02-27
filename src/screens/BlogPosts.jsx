@@ -1,23 +1,22 @@
 import { useEffect, useState } from 'react';
-import {
-  Box,
-  Heading,
-  Text,
-  VStack,
-  Spinner,
-  Tag,
-  HStack,
-} from '@chakra-ui/react';
+import { Box, Heading, Text, VStack, Tag, HStack } from '@chakra-ui/react';
 import Appbar from '../components/ui/Appbar';
 import axios from 'axios';
+import { getenv } from '../utils/getenv';
+import {
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
+} from '../components/ui/skeleton';
+
 const fetchPosts = async () => {
   const config = {
     method: 'get',
     maxBodyLength: Infinity,
-    url: '',
+    url: getenv('URL'),
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ',
+      Authorization: getenv('AUTH'),
     },
   };
 
@@ -48,9 +47,19 @@ const BlogPosts = () => {
     return (
       <>
         <Appbar />
-        <VStack colorPalette='teal' fontSize={'xl'} marginTop={50}>
-          <Spinner color='colorPalette.600' />
-          <Text color=''>Loading...</Text>
+        <VStack spacing={4} align='start'>
+          {[1, 2, 3, 4, 5].map((_, index) => (
+            <Box key={index} p={4} shadow='md' borderWidth='1px' width='full'>
+              <Skeleton height='20px' />
+              <SkeletonText noOfLines={3} spacing={4} />
+              <HStack spacing={2} mt={2}>
+                {[1, 2, 3].map((_, tagIndex) => (
+                  <SkeletonCircle key={tagIndex} size='8' />
+                ))}
+              </HStack>
+              <SkeletonText noOfLines={1} spacing={4} mt={2} />
+            </Box>
+          ))}
         </VStack>
       </>
     );
@@ -58,8 +67,8 @@ const BlogPosts = () => {
 
   return (
     <>
+      <Appbar />
       <VStack spacing={4} align='start'>
-        {console.log(posts)}
         {posts.map((post) => (
           <Box key={post.id} p={4} shadow='md' borderWidth='1px' width='full'>
             <Heading size='md'>{post.title}</Heading>
@@ -71,7 +80,7 @@ const BlogPosts = () => {
                   return (
                     <>
                       <Tag.Root size='lg' colorPalette={'green'}>
-                        <Tag.Label>{tag.name}</Tag.Label>
+                        <Tag.Label key={tag.id}>{tag.name}</Tag.Label>
                       </Tag.Root>
                     </>
                   );

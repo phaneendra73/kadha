@@ -1,5 +1,6 @@
-import { Group, InputElement } from '@chakra-ui/react'
-import * as React from 'react'
+/* eslint-disable react/prop-types */
+import { Group, InputElement } from '@chakra-ui/react';
+import * as React from 'react';
 
 export const InputGroup = React.forwardRef(function InputGroup(props, ref) {
   const {
@@ -11,9 +12,9 @@ export const InputGroup = React.forwardRef(function InputGroup(props, ref) {
     startOffset = '6px',
     endOffset = '6px',
     ...rest
-  } = props
+  } = props;
 
-  const child = React.Children.only(children)
+  const child = React.Children.only(children);
 
   return (
     <Group ref={ref} {...rest}>
@@ -35,5 +36,5 @@ export const InputGroup = React.forwardRef(function InputGroup(props, ref) {
         </InputElement>
       )}
     </Group>
-  )
-})
+  );
+});
