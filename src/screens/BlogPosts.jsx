@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, Heading, Text, VStack, Tag, HStack } from '@chakra-ui/react';
-import Appbar from '../components/ui/Appbar';
+import { Appbar, Footer } from '../components/ui/index';
 import axios from 'axios';
 import { getenv } from '../utils/getenv';
 import {
@@ -76,17 +76,13 @@ const BlogPosts = () => {
 
             <HStack spacing={2}>
               {post.tags?.length > 0 ? (
-                post.tags.map((tag) => {
-                  return (
-                    <>
-                      <Tag.Root size='lg' colorPalette={'green'}>
-                        <Tag.Label key={tag.id}>{tag.name}</Tag.Label>
-                      </Tag.Root>
-                    </>
-                  );
-                })
+                post.tags.map((tag) => (
+                  <Tag.Root key={tag.id} size='lg' colorPalette='green'>
+                    <Tag.Label>{tag.name}</Tag.Label>
+                  </Tag.Root>
+                ))
               ) : (
-                <Text></Text>
+                <Text>No tags available</Text>
               )}
             </HStack>
 
@@ -97,6 +93,7 @@ const BlogPosts = () => {
           </Box>
         ))}
       </VStack>
+      <Footer />
     </>
   );
 };

@@ -5,7 +5,6 @@ import {
   Kbd,
   Box,
   Text,
-  Link,
   HStack,
   DialogBody,
   DialogCloseTrigger,
@@ -14,22 +13,15 @@ import {
   DialogBackdrop,
 } from '@chakra-ui/react';
 import { LuSearch } from 'react-icons/lu';
-import { InputGroup } from './ui/input-group';
-
+import { InputGroup, useColorModeValue } from './index.js';
+import { IoClose } from 'react-icons/io5';
+import { getenv } from '../../utils/getenv';
 const suggestionsData = [
   {
     text: 'React Documentation',
     url: 'https://reactjs.org/docs/getting-started.html',
   },
   { text: 'Chakra UI Docs', url: 'https://chakra-ui.com/docs/getting-started' },
-  {
-    text: 'Chakra UI Docs2',
-    url: 'https://chakra-ui.com/docs/getting-started',
-  },
-  {
-    text: 'Chakra UI Docs3',
-    url: 'https://chakra-ui.com/docs/getting-started',
-  },
   {
     text: 'JavaScript Tutorial',
     url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide',
@@ -39,15 +31,16 @@ const suggestionsData = [
 ];
 
 const SearchBar = () => {
-  const inputRef = useRef(null);
+  const inputRef = useRef(null); // Reference for the main input
+  const dialogInputRef = useRef(null); // Reference for the input inside the dialog
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-
+  const BorderColor = useColorModeValue(getenv('THEMECOLOR'), 'white');
   const handleKeyDown = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
-      setDialogOpen(true);
+      setDialogOpen(true); // Open dialog when Ctrl+K or Cmd+K is pressed
     }
   };
 
@@ -74,18 +67,19 @@ const SearchBar = () => {
   }, []);
 
   useEffect(() => {
-    // Focus the input inside the dialog after it's open
-    if (dialogOpen && inputRef.current) {
+    if (dialogOpen) {
       setTimeout(() => {
-        inputRef.current.focus(); // Focus the input after a slight delay to ensure dialog is rendered
-      }, 100); // Timeout of 100ms
+        if (dialogInputRef.current) {
+          dialogInputRef.current.focus();
+        }
+      }, 100);
     }
   }, [dialogOpen]);
 
   return (
     <HStack gap='4' width='full' justify='center' position='relative'>
-      {/* Search Input wrapped in Box */}
-      <Box width='70%' position='relative'>
+      {/* Main search bar */}
+      <Box width={{ base: '90%', md: '60%' }} position='relative'>
         <InputGroup
           flex='1'
           startElement={<LuSearch />}
@@ -101,42 +95,35 @@ const SearchBar = () => {
             size='lg'
             fontSize='lg'
             paddingLeft='3.5em'
-            width='100%' // Ensure the input takes up full width within the container
-            disabled={dialogOpen} // Disable the main input when the dialog is open
-            pointerEvents={dialogOpen ? 'none' : 'auto'} // Disable pointer events when dialog is open
-            _focus={
-              dialogOpen
-                ? {}
-                : {
-                    // Remove focus styles when dialog is open
-                    borderColor: 'green.400',
-                    boxShadow: '0 0 0 1px green.400',
-                  }
-            }
+            width='100%'
+            pointerEvents={'none'}
+            cursor={'default'}
+            border={'2px solid '}
+            borderColor={BorderColor}
           />
         </InputGroup>
       </Box>
 
-      {/* Dialog for Search Suggestions */}
+      {/* Dialog to show suggestions */}
       <DialogRoot open={dialogOpen}>
         <DialogBackdrop
           bg='rgba(0, 0, 0, 0.4)' // Semi-transparent background
           backdropFilter='blur(5px)' // Apply blur to the background
         />
         <DialogContent
-          width='60%' // Set the dialog width to be 60% of the screen
+          width={{ base: '80%', sm: '70%', md: '60%' }} // Responsive dialog width
           margin='auto'
           borderRadius='md'
           boxShadow='lg'
-          padding='2rem'
           display='flex'
           flexDirection='column'
           position='fixed'
           top='50%'
           left='50%'
-          transform='translate(-50%, -50%)' // Center the dialog on screen
+          transform='translate(-50%, -50%)'
+          p={6} // Add padding for better spacing
         >
-          {/* Close Button moved to Top-Right */}
+          {/* Close Button */}
           <DialogCloseTrigger
             as={Button}
             onClick={() => setDialogOpen(false)}
@@ -146,39 +133,62 @@ const SearchBar = () => {
             right='10px'
             size='sm'
             variant='ghost'
+            _hover={{ bg: 'transparent' }}
+            _focus={{ boxShadow: 'none' }}
           >
-            X
+            <IoClose />
           </DialogCloseTrigger>
 
-          <DialogBody>
+          <DialogBody
+            display='flex'
+            flexDirection='column'
+            justifyContent='center'
+            alignItems='center'
+          >
             <InputGroup
               flex='1'
               startElement={<LuSearch />}
               onClick={handleClickSearchBar}
+              width='100%'
             >
               <Input
-                ref={inputRef}
+                ref={dialogInputRef}
                 value={query || ''}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder='Search...'
                 size='lg'
                 fontSize='lg'
                 paddingLeft='3.5em'
-                _focus={{
-                  borderColor: 'green.400',
-                  boxShadow: '0 0 0 1px green.400',
-                }}
+                width='100%' // Ensures input takes up the full width inside the dialog
               />
             </InputGroup>
 
-            {/* Display suggestions inside dialog body */}
+            {/* Suggestions Box */}
             {suggestions.length > 0 && (
-              <Box mt={4}>
+              <Box
+                mt={4}
+                width='100%'
+                maxHeight='200px'
+                overflowY='auto'
+                border='1px solid #ccc'
+                borderRadius='md'
+              >
                 {suggestions.map((suggestion, index) => (
-                  <Box key={index} mb={2}>
-                    <Link href={suggestion.url} isExternal>
-                      <Text>{suggestion.text}</Text>
-                    </Link>
+                  <Box
+                    key={index}
+                    mb={2}
+                    p={2}
+                    _hover={{ bg: 'gray.500', cursor: 'pointer' }}
+                    borderRadius='md'
+                    transition='background-color 0.2s'
+                    onClick={() => window.open(suggestion.url, '_blank')}
+                  >
+                    <Text>{suggestion.text}</Text>
+                    {suggestion.description && (
+                      <Text fontSize='sm' color='gray.500'>
+                        {suggestion.description}
+                      </Text>
+                    )}
                   </Box>
                 ))}
               </Box>

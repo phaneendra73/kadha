@@ -6,21 +6,30 @@ import {
   FaLinkedin,
   FaGithub,
 } from 'react-icons/fa';
-import { useColorModeValue, useColorMode } from '../components/ui/color-mode';
+import { useColorModeValue, useColorMode } from './index.js';
+
 const Footer = () => {
   const { colorMode, toggleColorMode } = useColorMode();
-  const bg = useColorModeValue('gray.100', 'gray.999');
   const color = useColorModeValue('gray.800', 'gray.200');
   const iconColor = useColorModeValue('black', 'white');
   const buttonColor = useColorModeValue('gray.200', 'gray.800');
-  const hoverColor = useColorModeValue('gray.300', 'gray.600');
 
   return (
-    <Box bg={bg} color={color} py={3} px={8} borderRadius='lg' boxShadow='xl'>
+    <Box
+      color={color}
+      py={3}
+      px={8}
+      borderRadius='lg'
+      boxShadow='xl'
+      w='100%' // Ensure the footer takes up the full width of the viewport
+      position='relative' // Make sure footer doesn't overlap with other content
+      zIndex='10'
+    >
       <Flex
         justify='space-between'
         align='center'
         direction={{ base: 'column', md: 'row' }}
+        w='100%' // Make sure Flex container takes full width
       >
         <Text fontSize='lg' fontWeight='bold' mb={{ base: 4, md: 0 }}>
           &copy; {new Date().getFullYear()} Kadha
@@ -52,8 +61,8 @@ const Footer = () => {
             borderColor={iconColor}
             color={iconColor}
             _hover={{
-              borderColor: hoverColor,
-              backgroundColor: hoverColor,
+              borderColor: 'gray.500',
+              backgroundColor: 'gray.500',
               color: buttonColor,
             }}
             onClick={toggleColorMode}
