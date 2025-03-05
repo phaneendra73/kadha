@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { userRoutes } from './routes/user';
+import { userprofilesRoutes } from './routes/user';
 import { blogRoutes } from './routes/blog';
 
 const app = new Hono();
 app.use('/*', cors());
 // Define your specific routes
-app.route('/user', userRoutes);
+app.route('/user', userprofilesRoutes);
 app.route('/blog', blogRoutes);
 app.get('/', (c) => {
 	// You can return a JSON response or any other response you need
