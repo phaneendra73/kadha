@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,65 +7,58 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User Table
 model userprofiles {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique
-  password  String
+  id         Int        @id @default(autoincrement())
+  email      String     @unique
+  password   String
   profileUrl String?
-  status    UserStatus @default(ACTIVE)
-  blogs     blogs[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  status     UserStatus @default(ACTIVE)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  name       String?
+  blogs      blogs[]
 }
 
-// Enum for user status
+model blogs {
+  id          Int           @id @default(autoincrement())
+  title       String
+  imageUrl    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  authorId    Int
+  published   Boolean       @default(false)
+  blogContent blogmd?
+  author      userprofiles  @relation(fields: [authorId], references: [id])
+  tags        tagsonblogs[]
+}
+
+model blogmd {
+  id        Int      @id @default(autoincrement())
+  content   String
+  blogId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  blog      blogs    @relation(fields: [blogId], references: [id])
+}
+
+model tags {
+  id        Int           @id @default(autoincrement())
+  name      String        @unique
+  createdAt DateTime      @default(now())
+  blogs     tagsonblogs[]
+}
+
+model tagsonblogs {
+  blogId     Int
+  tagId      Int
+  assignedAt DateTime @default(now())
+  blog       blogs    @relation(fields: [blogId], references: [id])
+  tag        tags     @relation(fields: [tagId], references: [id])
+
+  @@id([blogId, tagId])
+}
+
 enum UserStatus {
   ACTIVE
   DELETED
-}
-
-// Blog Table
-model blogs {
-  id          Int       @id @default(autoincrement())
-  title       String
-  imageUrl    String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  authorId    Int
-  author      userprofiles      @relation(fields: [authorId], references: [id])
-  published   Boolean   @default(false)
-  blogContent blogmd?
-  categories  tagsonblogs[] // Relationship through a junction table
-}
-
-// Blog Content Table (HTML/Markdown content)
-model blogmd {
-  id        Int      @id @default(autoincrement())
-  content   String   // The content could be in HTML or Markdown format
-  blogId    Int      @unique
-  blog      blogs     @relation(fields: [blogId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Tag Table
-model tags {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  blogs     tagsonblogs[] // Relationship through the junction table
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Junction table for many-to-many relation between Blog and Tag
-model tagsonblogs {
-  blog       blogs     @relation(fields: [blogId], references: [id])
-  blogId     Int      // relation scalar field
-  tag        tags      @relation(fields: [tagId], references: [id])
-  tagId      Int      // relation scalar field
-  assignedAt DateTime @default(now())  // Metadata for when the tag was assigned
-  assignedBy String   // Metadata for who assigned the tag
-
-  @@id([blogId, tagId])  // Composite primary key
 }
