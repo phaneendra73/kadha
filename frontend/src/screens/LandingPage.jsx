@@ -25,8 +25,8 @@ export default function Hero() {
 
   // Animation based on mouse position
   const motionStyles = {
-    x: (mousePosition.x - window.innerWidth / 2) * 0.03, // Parallax effect based on mouse X position
-    y: (mousePosition.y - window.innerHeight / 2) * 0.03, // Parallax effect based on mouse Y position
+    x: (mousePosition.x - window.innerWidth / 2) * 0.02, // Parallax effect based on mouse X position
+    y: (mousePosition.y - window.innerHeight / 2) * 0.02, // Parallax effect based on mouse Y position
     transition: {
       type: 'spring',
       damping: 10,
@@ -114,8 +114,8 @@ export default function Hero() {
               textAlign='center'
               mb={6}
             >
-              A place where you&apos;ll discover valuable content to enhance
-              your skills and expand your knowledge.
+              A destination where learning never stops, providing you with the
+              insights to grow, learn, and achieve more.
             </Text>
           </Box>
         </motion.div>

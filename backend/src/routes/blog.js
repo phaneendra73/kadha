@@ -7,11 +7,15 @@ export const blogRoutes = new Hono();
 // 1.Get All Home page
 blogRoutes.get('/getall', async (c) => {
 	try {
-		const page = parseInt(c.req.param('page')) || 1;
-		const limit = parseInt(c.req.param('limit')) || 20;
-		const selectedTags = c.req.param('tags') ? c.req.param('tags').split(',') : []; // Get the selected tags from the query (comma-separated list)
+		// Retrieve query parameters from the request
+		const page = parseInt(c.req.query('page')) || 1; // Default page is 1 if not provided
+		const limit = parseInt(c.req.query('limit')) || 10; // Default limit is 10 if not provided
+		const query = c.req.query('query') || ''; // Search query for the title (optional)
+		const selectedTags = c.req.query('tags') ? c.req.query('tags').split(',') : []; // Tags parameter, split by commas if present
 
-		// Calculate pagination offset
+		console.log(`Query: ${query}, Tags: ${selectedTags}, Page: ${page}, Limit: ${limit}`);
+
+		// Calculate the skip (pagination offset)
 		const skip = (page - 1) * limit;
 
 		const prisma = new PrismaClient({
@@ -21,15 +25,30 @@ blogRoutes.get('/getall', async (c) => {
 		let blogQuery = {
 			where: {
 				published: true, // Only published blogs
+				...(query && { title: { contains: query, mode: 'insensitive' } }), // Filter by title if query is provided
+				...(selectedTags.length > 0 && {
+					tags: {
+						some: {
+							tag: {
+								name: {
+									in: selectedTags, // Filter by selected tags
+								},
+							},
+						},
+					},
+				}),
 			},
 			skip: skip, // Skip for pagination
 			take: limit, // Limit the number of results
+			orderBy: {
+				createdAt: 'desc', // Order by createdAt, latest first
+			},
 			include: {
 				tags: {
 					select: {
 						tag: {
 							select: {
-								name: true, // Get the tag name
+								name: true, // Get the tag names
 							},
 						},
 					},
@@ -37,20 +56,7 @@ blogRoutes.get('/getall', async (c) => {
 			},
 		};
 
-		// If tags are selected, filter blogs by the tags
-		if (selectedTags.length > 0) {
-			blogQuery.where.tags = {
-				some: {
-					tag: {
-						name: {
-							in: selectedTags, // Filter by the selected tags
-						},
-					},
-				},
-			};
-		}
-
-		// Fetch blogs with pagination and tags filtering
+		// Fetch blogs based on the query parameters (pagination, title search, and tag filtering)
 		const blogs = await prisma.blogs.findMany(blogQuery);
 
 		// Map the tags data for each blog and return the desired structure
@@ -69,10 +75,22 @@ blogRoutes.get('/getall', async (c) => {
 		const totalBlogs = await prisma.blogs.count({
 			where: {
 				published: true,
-				tags: selectedTags.length > 0 ? { some: { tag: { name: { in: selectedTags } } } } : undefined, // Only count blogs filtered by selected tags
+				...(query && { title: { contains: query, mode: 'insensitive' } }), // Count with title search if query is provided
+				...(selectedTags.length > 0 && {
+					tags: {
+						some: {
+							tag: {
+								name: {
+									in: selectedTags, // Only count blogs filtered by selected tags
+								},
+							},
+						},
+					},
+				}),
 			},
 		});
 
+		// Return the response with the blog data and pagination information
 		return c.json({
 			blogs: mappedBlogs,
 			pagination: {

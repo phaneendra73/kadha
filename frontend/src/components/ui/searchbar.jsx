@@ -4,43 +4,82 @@ import {
   Input,
   Kbd,
   Box,
-  Text,
   HStack,
-  DialogBody,
   DialogCloseTrigger,
   DialogContent,
   DialogRoot,
   DialogBackdrop,
 } from '@chakra-ui/react';
 import { LuSearch } from 'react-icons/lu';
-import { InputGroup, useColorModeValue } from './index.js';
 import { IoClose } from 'react-icons/io5';
-import { getenv } from '../../utils/getenv';
-const suggestionsData = [
-  {
-    text: 'React Documentation',
-    url: 'https://reactjs.org/docs/getting-started.html',
-  },
-  { text: 'Chakra UI Docs', url: 'https://chakra-ui.com/docs/getting-started' },
-  {
-    text: 'JavaScript Tutorial',
-    url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide',
-  },
-  { text: 'CSS Tricks', url: 'https://css-tricks.com/' },
-  { text: 'Web Development Blog', url: 'https://www.smashingmagazine.com/' },
-];
-
+import { InputGroup, useColorModeValue } from './index.js';
+import { useDebounce } from 'use-debounce'; // We'll use this for debouncing the search input
+import SearchResult from './SearchResult.jsx';
 const SearchBar = () => {
   const inputRef = useRef(null); // Reference for the main input
   const dialogInputRef = useRef(null); // Reference for the input inside the dialog
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const BorderColor = useColorModeValue(getenv('THEMECOLOR'), 'white');
+  const [blogs, setBlogs] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const BorderColor = useColorModeValue('black', 'white');
+  const [debouncedQuery] = useDebounce(query, 500); // Debounce the query
+
+  const fetchBlogs = async (
+    searchQuery = '',
+    pageNumber = 1,
+    selectedTags = []
+  ) => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8787/blog/getall?query=${searchQuery}&page=${pageNumber}&limit=10&tags=${selectedTags.join(
+          ','
+        )}`
+      );
+      const data = await response.json();
+
+      setBlogs((prevBlogs) =>
+        pageNumber === 1 ? data.blogs : [...prevBlogs, ...data.blogs]
+      );
+      setTotalCount(data.pagination.totalCount);
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Trigger an API call when debounced query changes
+  useEffect(() => {
+    if (debouncedQuery || debouncedQuery === '') {
+      setPage(1); // Reset page to 1 when the query changes
+      fetchBlogs(debouncedQuery);
+    }
+  }, [debouncedQuery]);
+
+  // Trigger fetching more blogs on scroll
+  const handleScroll = (e) => {
+    const bottom =
+      e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
+    if (bottom && blogs.length < totalCount && !loading) {
+      setPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  useEffect(() => {
+    if (page > 1) {
+      fetchBlogs(debouncedQuery, page);
+    }
+  }, [debouncedQuery, page]);
+
   const handleKeyDown = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
-      setDialogOpen(true); // Open dialog when Ctrl+K or Cmd+K is pressed
+      setDialogOpen(true);
     }
   };
 
@@ -49,23 +88,31 @@ const SearchBar = () => {
   };
 
   useEffect(() => {
-    if (query.length === 0) {
-      setSuggestions([]);
-    } else {
-      const filteredSuggestions = suggestionsData.filter((suggestion) =>
-        suggestion.text.toLowerCase().includes(query.toLowerCase())
-      );
-      setSuggestions(filteredSuggestions);
-    }
-  }, [query]);
-
-  useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
+  // Fetching suggestions
+  useEffect(() => {
+    if (debouncedQuery.length > 0) {
+      // If query is provided, search the suggestions
+      const filteredSuggestions = blogs.filter((blog) =>
+        blog.title.toLowerCase().includes(debouncedQuery.toLowerCase())
+      );
+      setSuggestions(filteredSuggestions);
+    } else {
+      // If no query, fetch the latest blogs
+      setSuggestions(blogs);
+    }
+  }, [debouncedQuery, blogs]);
+
+  useEffect(() => {
+    fetchBlogs();
+  }, []); // Initial fetch when the component is mounted
+
+  // Focus the input field after the dialog opens
   useEffect(() => {
     if (dialogOpen) {
       setTimeout(() => {
@@ -84,7 +131,7 @@ const SearchBar = () => {
           flex='1'
           startElement={<LuSearch />}
           endElement={<Kbd>Ctrl + K</Kbd>}
-          onClick={handleClickSearchBar}
+          onClick={handleClickSearchBar} // Open dialog on click
           display='flex'
           alignItems='center'
           justifyContent='space-between'
@@ -96,9 +143,9 @@ const SearchBar = () => {
             fontSize='lg'
             paddingLeft='3.5em'
             width='100%'
-            pointerEvents={'none'}
-            cursor={'default'}
-            border={'2px solid '}
+            pointerEvents='none'
+            cursor='default'
+            border='0.11rem solid'
             borderColor={BorderColor}
           />
         </InputGroup>
@@ -121,30 +168,25 @@ const SearchBar = () => {
           top='50%'
           left='50%'
           transform='translate(-50%, -50%)'
-          p={6} // Add padding for better spacing
+          p={6}
         >
           {/* Close Button */}
           <DialogCloseTrigger
             as={Button}
             onClick={() => setDialogOpen(false)}
-            visibility='visible'
             position='absolute'
-            top='10px'
-            right='10px'
-            size='sm'
+            top='25px'
+            right='25px'
+            size='md'
             variant='ghost'
             _hover={{ bg: 'transparent' }}
-            _focus={{ boxShadow: 'none' }}
+            zIndex={99}
           >
             <IoClose />
           </DialogCloseTrigger>
 
-          <DialogBody
-            display='flex'
-            flexDirection='column'
-            justifyContent='center'
-            alignItems='center'
-          >
+          {/* Search Bar inside the dialog */}
+          <Box display='flex' alignItems='center' mb={4}>
             <InputGroup
               flex='1'
               startElement={<LuSearch />}
@@ -159,41 +201,29 @@ const SearchBar = () => {
                 size='lg'
                 fontSize='lg'
                 paddingLeft='3.5em'
-                width='100%' // Ensures input takes up the full width inside the dialog
+                width='100%'
+                _focus={{ border: 'none' }}
               />
             </InputGroup>
+          </Box>
 
-            {/* Suggestions Box */}
-            {suggestions.length > 0 && (
-              <Box
-                mt={4}
-                width='100%'
-                maxHeight='200px'
-                overflowY='auto'
-                border='1px solid #ccc'
-                borderRadius='md'
-              >
-                {suggestions.map((suggestion, index) => (
-                  <Box
-                    key={index}
-                    mb={2}
-                    p={2}
-                    _hover={{ bg: 'gray.500', cursor: 'pointer' }}
-                    borderRadius='md'
-                    transition='background-color 0.2s'
-                    onClick={() => window.open(suggestion.url, '_blank')}
-                  >
-                    <Text>{suggestion.text}</Text>
-                    {suggestion.description && (
-                      <Text fontSize='sm' color='gray.500'>
-                        {suggestion.description}
-                      </Text>
-                    )}
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </DialogBody>
+          {/* Suggestions Box */}
+          {suggestions.length > 0 && (
+            <Box
+              mt={4}
+              width='100%'
+              maxHeight='200px'
+              overflowY='auto'
+              border='1px solid #ccc'
+              borderRadius='md'
+              boxShadow='md'
+              onScroll={handleScroll}
+            >
+              {suggestions.map((suggestion, index) => (
+                <SearchResult key={index} suggestion={suggestion} />
+              ))}
+            </Box>
+          )}
         </DialogContent>
       </DialogRoot>
     </HStack>

@@ -48,7 +48,7 @@ const Appbar = () => {
       width={{ base: '100%', md: '80%' }}
       mx='auto'
       borderRadius='15px'
-      border='1px solid white'
+      border={`1px solid ${textColor}`}
     >
       <Flex justify='space-between' align='center'>
         {/* Blog Heading */}
