@@ -5,13 +5,13 @@ import { blogRoutes } from './routes/blog';
 
 const app = new Hono();
 app.use('/*', cors());
-// Define your specific routes
+
 app.route('/user', userprofilesRoutes);
 app.route('/blog', blogRoutes);
 app.get('/', (c) => {
-	// You can return a JSON response or any other response you need
 	return c.json({ message: 'Welcome to the kadha API!' }, 200);
 });
+
 // Catch-all route for unmatched routes
 app.notFound((c) => {
 	return c.json({ error: 'Not Found' }, 404);
