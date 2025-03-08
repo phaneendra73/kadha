@@ -258,24 +258,25 @@ blogRoutes.get('/get/:id', async (c) => {
 			datasourceUrl: c.env.DATABASE_URL,
 		}).$extends(withAccelerate());
 
-		const blogId = parseInt(c.req.param('id')); // Get the blog ID from the URL parameter
+		// Get the blog ID from the URL parameter
+		const blogId = parseInt(c.req.param('id'));
 
 		if (!blogId || isNaN(blogId)) {
 			return c.json({ error: 'Invalid or missing blog ID' }, 400);
 		}
 
-		// Fetch the blog by ID along with its markdown content (blogmd)
+		// Fetch the blog by ID, including related content and tags
 		const blog = await prisma.blogs.findUnique({
 			where: {
 				id: blogId, // Find the blog by ID
 			},
 			include: {
-				blogContent: true, // Include the associated markdown content
+				blogContent: true, // Include associated markdown content
 				tags: {
 					select: {
 						tag: {
 							select: {
-								name: true, // Get the tag names
+								name: true, // Get tag names
 							},
 						},
 					},
@@ -287,8 +288,8 @@ blogRoutes.get('/get/:id', async (c) => {
 		if (!blog) {
 			return c.json({ error: 'Blog not found' }, 404);
 		}
-
-		// Format the response data to include tags and markdown content
+		console.log(blog);
+		// Format the response with blog data
 		const blogWithMarkdown = {
 			id: blog.id,
 			title: blog.title,
@@ -297,11 +298,11 @@ blogRoutes.get('/get/:id', async (c) => {
 			updatedAt: blog.updatedAt,
 			authorId: blog.authorId,
 			published: blog.published,
-			tags: blog.tags.map((tagLink) => tagLink.tag.name), // Extract the tag names
-			markdownContent: blog.blogContent ? blog.blogContent.content : null, // Get the markdown content if exists
+			tags: blog.tags.map((tagLink) => tagLink.tag.name), // Extract tag names
+			markdownContent: blog.blogContent ? blog.blogContent.content : '', // Fallback to empty string if no markdown content
 		};
 
-		return c.json(blogWithMarkdown);
+		return c.json(blogWithMarkdown); // Return the formatted blog data
 	} catch (error) {
 		console.error(error);
 		return c.json({ error: 'Failed to fetch blog data' }, 500);

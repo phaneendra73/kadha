@@ -4,6 +4,7 @@ import {
   useColorModeValue,
   SearchBar,
   Appbar,
+  HomePage,
 } from '../components/ui/index.js';
 import { useEffect, useState } from 'react';
 
@@ -121,6 +122,7 @@ export default function Hero() {
         </motion.div>
       </Container>
       <SearchBar />
+      <HomePage />
     </>
   );
 }
