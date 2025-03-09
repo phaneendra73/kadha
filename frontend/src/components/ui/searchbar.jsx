@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+/* eslint-disable no-unused-vars */
+import { useState, useEffect, useRef } from 'react';
 import {
   Button,
   Input,
@@ -9,73 +10,49 @@ import {
   DialogContent,
   DialogRoot,
   DialogBackdrop,
+  VStack,
 } from '@chakra-ui/react';
 import { LuSearch } from 'react-icons/lu';
 import { IoClose } from 'react-icons/io5';
-import { InputGroup, useColorModeValue } from './index.js';
-import { useDebounce } from 'use-debounce'; // We'll use this for debouncing the search input
-import SearchResult from './SearchResult.jsx';
+import {
+  InputGroup,
+  useColorModeValue,
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
+} from './index.js';
+import { useDebounce } from 'use-debounce'; // Debounce input to delay API calls
+import useSearch from '../../hooks/useSearch.js'; // Import the custom useSearch hook
+import SearchResult from './SearchResult.jsx'; // Component to display search results
+
 const SearchBar = () => {
-  const inputRef = useRef(null); // Reference for the main input
+  const inputRef = useRef(null); // Reference for the main input field
   const dialogInputRef = useRef(null); // Reference for the input inside the dialog
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [blogs, setBlogs] = useState([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1); // Page for infinite scroll
   const BorderColor = useColorModeValue('black', 'white');
-  const [debouncedQuery] = useDebounce(query, 500); // Debounce the query
+  const [debouncedQuery] = useDebounce(query, 1000); // Debounced search query
 
-  const fetchBlogs = async (
-    searchQuery = '',
-    pageNumber = 1,
-    selectedTags = []
-  ) => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:8787/blog/getall?query=${searchQuery}&page=${pageNumber}&limit=10&tags=${selectedTags.join(
-          ','
-        )}`
-      );
-      const data = await response.json();
+  // Using the custom useSearch hook for fetching blogs
+  const {
+    blogs,
+    totalCount,
+    totalPages,
+    loading: searchLoading,
+    error,
+  } = useSearch(page, debouncedQuery);
 
-      setBlogs((prevBlogs) =>
-        pageNumber === 1 ? data.blogs : [...prevBlogs, ...data.blogs]
-      );
-      setTotalCount(data.pagination.totalCount);
-    } catch (error) {
-      console.error('Error fetching blogs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Trigger an API call when debounced query changes
-  useEffect(() => {
-    if (debouncedQuery || debouncedQuery === '') {
-      setPage(1); // Reset page to 1 when the query changes
-      fetchBlogs(debouncedQuery);
-    }
-  }, [debouncedQuery]);
-
-  // Trigger fetching more blogs on scroll
+  // Trigger fetching more blogs when scroll reaches the bottom
   const handleScroll = (e) => {
     const bottom =
       e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
-    if (bottom && blogs.length < totalCount && !loading) {
-      setPage((prevPage) => prevPage + 1);
+    if (bottom && blogs.length < totalCount && !searchLoading) {
+      setPage((prevPage) => prevPage + 1); // Load next page of results
     }
   };
 
-  useEffect(() => {
-    if (page > 1) {
-      fetchBlogs(debouncedQuery, page);
-    }
-  }, [debouncedQuery, page]);
-
+  // Handle key down events to open dialog with Ctrl+K
   const handleKeyDown = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
@@ -94,25 +71,7 @@ const SearchBar = () => {
     };
   }, []);
 
-  // Fetching suggestions
-  useEffect(() => {
-    if (debouncedQuery.length > 0) {
-      // If query is provided, search the suggestions
-      const filteredSuggestions = blogs.filter((blog) =>
-        blog.title.toLowerCase().includes(debouncedQuery.toLowerCase())
-      );
-      setSuggestions(filteredSuggestions);
-    } else {
-      // If no query, fetch the latest blogs
-      setSuggestions(blogs);
-    }
-  }, [debouncedQuery, blogs]);
-
-  useEffect(() => {
-    fetchBlogs();
-  }, []); // Initial fetch when the component is mounted
-
-  // Focus the input field after the dialog opens
+  // Focus the input field when the dialog opens
   useEffect(() => {
     if (dialogOpen) {
       setTimeout(() => {
@@ -122,6 +81,13 @@ const SearchBar = () => {
       }, 100);
     }
   }, [dialogOpen]);
+
+  // Effect to handle the initial fetch of blogs
+  useEffect(() => {
+    if (debouncedQuery || debouncedQuery === '') {
+      setPage(1); // Reset to page 1 when query changes
+    }
+  }, [debouncedQuery]);
 
   return (
     <HStack gap='4' width='full' justify='center' position='relative'>
@@ -207,8 +173,8 @@ const SearchBar = () => {
             </InputGroup>
           </Box>
 
-          {/* Suggestions Box */}
-          {suggestions.length > 0 && (
+          {/* Suggestions Box with Infinite Scroll */}
+          {blogs.length > 0 && (
             <Box
               mt={4}
               width='100%'
@@ -217,13 +183,58 @@ const SearchBar = () => {
               border='1px solid #ccc'
               borderRadius='md'
               boxShadow='md'
-              onScroll={handleScroll}
+              onScroll={handleScroll} // Handle scroll event to load more blogs
             >
-              {suggestions.map((suggestion, index) => (
-                <SearchResult key={index} suggestion={suggestion} />
+              {blogs.map((blog) => (
+                <SearchResult key={blog.id} suggestion={blog} />
               ))}
+              {searchLoading && (
+                <VStack spacing={4} align='start' m={2}>
+                  {[1, 2, 3].map((_, index) => (
+                    <Box
+                      key={index}
+                      p={4}
+                      shadow='md'
+                      borderWidth='1px'
+                      width='full'
+                      display='flex'
+                      alignItems='center'
+                      justifyContent='space-between'
+                    >
+                      <HStack spacing={4} flex='1'>
+                        <SkeletonCircle size='12' />
+                        <Box>
+                          <Skeleton height='20px' width='200px' />
+                          <SkeletonText
+                            noOfLines={2}
+                            spacing={4}
+                            mt={2}
+                            width='250px'
+                          />
+                        </Box>
+                      </HStack>
+                      <Box
+                        display='flex'
+                        flexDirection='column'
+                        alignItems='flex-end'
+                      >
+                        <Skeleton height='20px' width='100px' mb={2} />
+                        <HStack spacing={2} mt={2}>
+                          <Skeleton height='20px' width='50px' />
+                          <Skeleton height='20px' width='50px' />
+                          <Skeleton height='20px' width='50px' />
+                        </HStack>
+                      </Box>
+                    </Box>
+                  ))}
+                </VStack>
+              )}
             </Box>
           )}
+          {/* Loading spinner */}
+
+          {/* Error message */}
+          {error && <p style={{ color: 'red' }}>Error: {error}</p>}
         </DialogContent>
       </DialogRoot>
     </HStack>

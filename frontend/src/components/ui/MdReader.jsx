@@ -11,8 +11,15 @@ import {
   Link,
   IconButton,
   useBreakpointValue,
+  Skeleton,
 } from '@chakra-ui/react';
-import { Appbar, Footer, useColorModeValue } from './index';
+import {
+  Appbar,
+  Footer,
+  useColorModeValue,
+  SkeletonCircle,
+  SkeletonText,
+} from './index';
 import { extractHeaders } from './extractheader';
 import { GiHamburgerMenu } from 'react-icons/gi';
 import {
@@ -41,7 +48,7 @@ const ReadBlog = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8787/blog/get/${id}`);
+        const response = await fetch(`${getenv('APIURL')}/blog/get/${id}`);
         const data = await response.json();
         if (data.error) {
           console.error(data.error);
@@ -90,7 +97,16 @@ const ReadBlog = () => {
   }, [handleScroll]);
 
   if (loading) {
-    return <Text>Loading...</Text>;
+    return (
+      <>
+        <Appbar />
+        <Box>
+          <Skeleton height='40px' mb={4} />
+          <Skeleton height='200px' mb={4} />
+          <SkeletonText mt={4} noOfLines={4} spacing='4' />
+        </Box>
+      </>
+    );
   }
 
   if (!blog) {
@@ -180,24 +196,35 @@ const ReadBlog = () => {
                 bg='gray.200'
                 overflow='hidden'
               >
-                <Image
-                  src={blog.imageUrl}
-                  alt={blog.title}
-                  objectFit='cover'
-                  width='100%'
-                  height='100%'
-                  borderRadius='10px'
-                />
+                {loading ? (
+                  <SkeletonCircle size='100px' />
+                ) : (
+                  <Image
+                    src={blog.imageUrl}
+                    alt={blog.title}
+                    objectFit='cover'
+                    width='100%'
+                    height='100%'
+                    borderRadius='10px'
+                  />
+                )}
               </Box>
 
               <Box>
-                <Text fontWeight='bold' fontSize='xl' mb={1}>
-                  {blog.title}
-                </Text>
-                <Text fontSize='sm' color='gray.500'>
-                  Published on {new Date(blog.createdAt).toLocaleDateString()}{' '}
-                  by Author #{blog.authorId}
-                </Text>
+                {loading ? (
+                  <SkeletonText mt={2} noOfLines={2} spacing='4' />
+                ) : (
+                  <>
+                    <Text fontWeight='bold' fontSize='xl' mb={1}>
+                      {blog.title}
+                    </Text>
+                    <Text fontSize='sm' color='gray.500'>
+                      Published on{' '}
+                      {new Date(blog.createdAt).toLocaleDateString()} by Author
+                      #{blog.authorId}
+                    </Text>
+                  </>
+                )}
               </Box>
             </Box>
 
@@ -230,10 +257,14 @@ const ReadBlog = () => {
             mt={4}
             onScroll={handleScroll}
           >
-            <MarkdownEditor.Markdown
-              source={blog.markdownContent || ''}
-              remarkRehypeOptions={rehypeSanitize}
-            />
+            {loading ? (
+              <SkeletonText mt={4} noOfLines={6} spacing='4' />
+            ) : (
+              <MarkdownEditor.Markdown
+                source={blog.markdownContent || ''}
+                remarkRehypeOptions={rehypeSanitize}
+              />
+            )}
           </Box>
         </Box>
 

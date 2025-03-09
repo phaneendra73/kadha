@@ -137,7 +137,9 @@ const Appbar = () => {
             </MenuTrigger>
 
             <MenuContent position='absolute' zIndex='999' top='100%' left='90%'>
-              <MenuItem value='new-txt'>New Text File</MenuItem>
+              <MenuItem value='new-txt' onClick={() => navigate('/Admin')}>
+                Admin
+              </MenuItem>
 
               <MenuItem value='new-file'>New File...</MenuItem>
 

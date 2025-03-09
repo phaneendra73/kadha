@@ -4,6 +4,7 @@ import { Box } from '@chakra-ui/react';
 import MdEditor from './screens/MdEditor';
 import LandingPage from './screens/LandingPage';
 import MdReader from './components/ui/MDReader';
+import Signin from './screens/Signin';
 
 const App = () => {
   return (
@@ -14,8 +15,7 @@ const App = () => {
           <Route path='/Blog/Read/:id' element={<MdReader />} />
           <Route path='/Editor' element={<MdEditor />} />
           <Route path='/BlogPosts' element={<BlogPosts />} />
-          {/* <Route path='/about' element={<About />} />
-        <Route path='/contact' element={<Contact />} /> */}
+          <Route path='/Admin' element={<Signin />} />
         </Routes>
       </Box>
     </>

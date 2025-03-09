@@ -4,7 +4,7 @@ import {
   useColorModeValue,
   SearchBar,
   Appbar,
-  HomePage,
+  HomeBlogs,
 } from '../components/ui/index.js';
 import { useEffect, useState } from 'react';
 
@@ -18,6 +18,16 @@ export default function Hero() {
   };
 
   useEffect(() => {
+    const pattern = `
+*******   *******    ******
+*     *        *          * 
+*     *       *           * 
+*******      *       ******
+*           *             * 
+*          *              *
+*         *          ******
+    `;
+    console.log(pattern);
     window.addEventListener('mousemove', handleMouseMove);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -35,19 +45,14 @@ export default function Hero() {
     },
   };
 
-  // Add a slight idle up and down animation using `y`
   const oscillationAnimation = {
-    y: [
-      -3, // Starting position (slightly up)
-      3, // Moving slightly down
-      -3, // Moving slightly up again
-    ],
+    y: [-3, 3, -3],
     transition: {
       y: {
-        duration: 2, // The duration of the oscillation cycle
-        repeat: Infinity, // Repeat infinitely
-        repeatType: 'loop', // Make it loop in both directions
-        ease: 'easeInOut', // Smooth easing
+        duration: 2,
+        repeat: Infinity,
+        repeatType: 'loop',
+        ease: 'easeInOut',
       },
     },
   };
@@ -122,7 +127,7 @@ export default function Hero() {
         </motion.div>
       </Container>
       <SearchBar />
-      <HomePage />
+      <HomeBlogs />
     </>
   );
 }
