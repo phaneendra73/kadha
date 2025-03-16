@@ -1,19 +1,21 @@
-import { Skeleton as ChakraSkeleton, Circle, Stack } from '@chakra-ui/react'
-import * as React from 'react'
+/* eslint-disable react/prop-types */
+import { Skeleton as ChakraSkeleton, Circle, Stack } from '@chakra-ui/react';
+import * as React from 'react';
 
-export const SkeletonCircle = React.forwardRef(
-  function SkeletonCircle(props, ref) {
-    const { size, ...rest } = props
-    return (
-      <Circle size={size} asChild ref={ref}>
-        <ChakraSkeleton {...rest} />
-      </Circle>
-    )
-  },
-)
+export const SkeletonCircle = React.forwardRef(function SkeletonCircle(
+  props,
+  ref
+) {
+  const { size, ...rest } = props;
+  return (
+    <Circle size={size} asChild ref={ref}>
+      <ChakraSkeleton {...rest} />
+    </Circle>
+  );
+});
 
 export const SkeletonText = React.forwardRef(function SkeletonText(props, ref) {
-  const { noOfLines = 3, gap, ...rest } = props
+  const { noOfLines = 3, gap, ...rest } = props;
   return (
     <Stack gap={gap} width='full' ref={ref}>
       {Array.from({ length: noOfLines }).map((_, index) => (
@@ -26,7 +28,7 @@ export const SkeletonText = React.forwardRef(function SkeletonText(props, ref) {
         />
       ))}
     </Stack>
-  )
-})
+  );
+});
 
-export const Skeleton = ChakraSkeleton
+export const Skeleton = ChakraSkeleton;

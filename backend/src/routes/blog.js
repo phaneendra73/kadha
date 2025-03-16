@@ -121,7 +121,9 @@ blogRoutes.post('/add', authenticateUser, async (c) => {
 		}
 		const prisma = new PrismaClient({
 			datasourceUrl: c.env.DATABASE_URL,
-			timeout: 10000,
+			transactionOptions: {
+				timeout: 10000,
+			},
 		}).$extends(withAccelerate());
 		const result = await prisma.$transaction(async (prisma) => {
 			// Create the blog

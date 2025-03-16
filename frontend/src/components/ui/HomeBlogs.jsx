@@ -14,10 +14,8 @@ const HomeBlogs = () => {
     currentPage,
     selectedTags
   ); // Pass currentPage to the custom hook
-  let dtae = new Date();
   // Fetch tags using custom hook
   const { tags, error: tagsError, loading: tagsLoading } = useTags();
-  console.log(blogs, tags, dtae);
 
   // Get background and text colors for the page based on theme
   const bgColor = useColorModeValue('gray.50', 'gray.800');

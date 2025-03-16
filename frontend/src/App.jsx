@@ -12,7 +12,7 @@ const App = () => {
       <Box pt='80px'>
         <Routes>
           <Route path='/' element={<LandingPage />} />
-          <Route path='/Blog/Read/:id' element={<MdReader />} />
+          <Route path='/Read' element={<MdReader />} />
           <Route path='/Editor' element={<MdEditor />} />
           <Route path='/BlogPosts' element={<BlogPosts />} />
           <Route path='/Admin' element={<Signin />} />

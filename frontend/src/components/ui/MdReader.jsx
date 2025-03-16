@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import MarkdownEditor from '@uiw/react-markdown-editor';
 import rehypeSanitize from 'rehype-sanitize';
 import {
@@ -35,7 +35,11 @@ import {
 import { getenv } from '../../utils/getenv';
 
 const ReadBlog = () => {
-  const { id } = useParams(); // Get blog ID from the URL parameter
+  const location = useLocation();
+
+  // Extract the 'id' query parameter from the URL
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id'); // Get 'id' from the query string
   const [blog, setBlog] = useState(null); // State to store the blog data
   const [loading, setLoading] = useState(true); // Loading state
   const [toc, setToc] = useState([]); // State to store the Table of Contents (TOC)

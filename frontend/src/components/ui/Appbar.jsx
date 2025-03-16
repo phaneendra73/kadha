@@ -121,12 +121,8 @@ const Appbar = () => {
               color={colorMode === 'dark' ? 'green.400' : 'gray.400'}
             />
           </Box>
-          <Button onClick={() => navigate('/BlogPosts')} variant='outline'>
-            Blogs
-          </Button>
-
-          <Button onClick={() => navigate('/Editor')} variant='outline'>
-            Add Post
+          <Button onClick={() => navigate('/')} variant='outline'>
+            Home
           </Button>
 
           <MenuRoot placement='bottom-end'>
@@ -137,17 +133,12 @@ const Appbar = () => {
             </MenuTrigger>
 
             <MenuContent position='absolute' zIndex='999' top='100%' left='90%'>
-              <MenuItem value='new-txt' onClick={() => navigate('/Admin')}>
+              <MenuItem value='Admin' onClick={() => navigate('/Admin')}>
                 Admin
               </MenuItem>
-
-              <MenuItem value='new-file'>New File...</MenuItem>
-
-              <MenuItem value='new-win'>New Window</MenuItem>
-
-              <MenuItem value='open-file'>Open File...</MenuItem>
-
-              <MenuItem value='export'>Export</MenuItem>
+              <MenuItem value='AddPost' onClick={() => navigate('/Editor')}>
+                Add Post
+              </MenuItem>
             </MenuContent>
           </MenuRoot>
         </Flex>
@@ -172,11 +163,14 @@ const Appbar = () => {
               <DrawerTitle>Menu</DrawerTitle>
             </DrawerHeader>
             <DrawerBody>
-              <Button w='100%' mb={4} onClick={() => navigate('/BlogPosts')}>
-                Blog Posts
+              <Button w='100%' mb={4} onClick={() => navigate('/')}>
+                Home
               </Button>
-              <Button w='100%' mb={4} onClick={() => navigate('/contact')}>
-                Contact
+              <Button w='100%' mb={4} onClick={() => navigate('/Admin')}>
+                Admin
+              </Button>
+              <Button w='100%' mb={4} onClick={() => navigate('/Editor')}>
+                Add Post
               </Button>
               <Button w='100%' mb={4} onClick={toggleColorMode}>
                 {colorMode === 'light' ? <GoSun /> : <GoMoon />}

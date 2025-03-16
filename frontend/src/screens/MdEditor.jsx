@@ -1,64 +1,115 @@
 import { useState } from 'react';
 import MDEditor from '@uiw/react-markdown-editor';
-import { Box, Button, Heading, Input, Stack, Field } from '@chakra-ui/react'; // Import Chakra UI components
-import { Appbar, Footer, useColorModeValue } from '../components/ui/index';
+import {
+  Box,
+  Button,
+  Input,
+  Stack,
+  Field,
+  Tag,
+  TagLabel,
+  Text,
+  HStack,
+  Container,
+  useBreakpointValue,
+  Flex,
+} from '@chakra-ui/react';
+import {
+  Appbar,
+  Footer,
+  useColorModeValue,
+  Skeleton,
+} from '../components/ui/index';
 import rehypeSanitize from 'rehype-sanitize';
-
-function Header() {
-  return (
-    <Box
-      display='flex'
-      justifyContent='space-between'
-      alignItems='center'
-      p='2'
-    >
-      <Heading size='lg'>Markdown Editor</Heading>
-    </Box>
-  );
-}
+import useTags from '../hooks/useTags';
+import { Toaster, toaster } from '../components/ui/toaster';
+import axios from 'axios';
+import { getenv } from '../utils/getenv';
 
 export default function MdEditor() {
   const EditorTheme = useColorModeValue('light', 'dark');
   const [value, setValue] = useState('**Hello world!!!**');
   const [title, setTitle] = useState('');
   const [imageUrl, setImageUrl] = useState('');
-  const [tags, setTags] = useState('');
+  const [selectedTags, setSelectedTags] = useState([]);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const apiUrl = getenv('APIURL');
 
+  // Responsive values
+  const editorHeight = useBreakpointValue({ base: '50vh', md: '80vh' });
+  const editorWidth = useBreakpointValue({ base: '100%', md: '98vw' });
+  const containerPadding = useBreakpointValue({ base: '2', md: '4' });
+
+  // Fetch tags using the hook
+  const {
+    tags: fetchedTags,
+    error: tagsError,
+    loading: tagsLoading,
+  } = useTags();
+
+  // Handle tag selection and deselection
+  const handleTagClick = (tagId, tagName) => {
+    if (selectedTags.some((tag) => tag.id === tagId)) {
+      setSelectedTags(selectedTags.filter((tag) => tag.id !== tagId)); // Deselect tag
+    } else {
+      setSelectedTags([...selectedTags, { id: tagId, name: tagName }]); // Select tag
+    }
+  };
+
+  // Submit handler for the form
   const handleSubmit = async () => {
     if (!title || !value) {
       setError('Title and content are required.');
       return;
     }
 
+    if (!localStorage.getItem('authToken')) {
+      toaster.create({
+        title: 'Not logged in',
+        description: 'Please log in to add a blog post.',
+        type: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
+
+    const authorId = 1;
 
     // Prepare data to send in the request body
     const blogData = {
       title,
       imageUrl,
-      tagIds: tags.split(',').map((tag) => tag.trim()), // Example: tags could be "1,2,3"
+      authorId, // Add the author's ID to the request
+      tagIds: selectedTags.map((tag) => tag.id), // Extract tag IDs from selected tags
       content: value,
     };
 
     try {
-      const response = await fetch('/api/blogs/add', {
-        method: 'POST',
+      const response = await axios.post(`${apiUrl}/blog/add`, blogData, {
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
-        body: JSON.stringify(blogData),
       });
 
-      const result = await response.json();
-      if (response.ok) {
-        alert('Blog created successfully!');
+      const result = response.data;
+      if (response.status === 201) {
+        toaster.create({
+          title: 'Blog Created',
+          description: 'Your blog post has been created successfully!',
+          type: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
         // Optionally, reset form fields after submission
         setTitle('');
         setImageUrl('');
-        setTags('');
+        setSelectedTags([]);
         setValue('**Hello world!!!**');
       } else {
         setError(result.error || 'Failed to create blog');
@@ -73,9 +124,9 @@ export default function MdEditor() {
 
   return (
     <>
+      <Toaster />
       <Appbar />
-      <Header />
-      <Box className='container' mt='4'>
+      <Container maxW='container.xl' px={containerPadding} py={4}>
         <Box data-color-mode={EditorTheme}>
           <Stack spacing={4}>
             <Field.Root>
@@ -98,42 +149,79 @@ export default function MdEditor() {
               />
             </Field.Root>
 
+            {/* Tag Selection */}
             <Field.Root>
-              <Field.Label htmlFor='tags'>Tags (comma-separated)</Field.Label>
-              <Input
-                id='tags'
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder='Enter tag IDs, e.g., 1,2,3'
-              />
+              <Field.Label htmlFor='tags'>Tags</Field.Label>
+              <Box>
+                {tagsLoading ? (
+                  <HStack spacing={2} mt={2} flexWrap='wrap'>
+                    <Skeleton height='20px' width='50px' />
+                    <Skeleton height='20px' width='50px' />
+                    <Skeleton height='20px' width='50px' />
+                  </HStack>
+                ) : tagsError ? (
+                  <Text color='red.500'>Error loading tags</Text>
+                ) : (
+                  <Flex flexWrap='wrap' gap={2}>
+                    {fetchedTags.map((tag) => (
+                      <Tag.Root
+                        key={tag.id}
+                        colorPalette={
+                          selectedTags.some((t) => t.id === tag.id)
+                            ? 'green'
+                            : 'gray'
+                        }
+                        size='md'
+                        onClick={() => handleTagClick(tag.id, tag.name)}
+                        cursor='pointer'
+                      >
+                        <TagLabel>{tag.name}</TagLabel>
+                        {selectedTags.some((t) => t.id === tag.id) && (
+                          <Tag.EndElement>
+                            <Tag.CloseTrigger
+                              onClick={() => handleTagClick(tag.id, tag.name)}
+                            />
+                          </Tag.EndElement>
+                        )}
+                      </Tag.Root>
+                    ))}
+                  </Flex>
+                )}
+              </Box>
             </Field.Root>
 
+            {/* Markdown Editor */}
             <Field.Root>
               <Field.Label htmlFor='content'>Content</Field.Label>
-              <MDEditor
-                value={value}
-                onChange={(val) => setValue(val)}
-                previewoptions={{
-                  rehypePlugins: [[rehypeSanitize]],
-                }}
-                height={'80vh'}
-                width='99vw'
-              />
+              <Box width='100%' overflowX='hidden'>
+                <MDEditor
+                  value={value}
+                  onChange={(val) => setValue(val)}
+                  previewoptions={{
+                    rehypePlugins: [[rehypeSanitize]],
+                  }}
+                  height={editorHeight}
+                  width={editorWidth}
+                />
+              </Box>
             </Field.Root>
 
             {error && <Box color='red.500'>{error}</Box>}
 
-            <Button
-              colorScheme='blue'
-              onClick={handleSubmit}
-              isLoading={isSubmitting}
-              loadingText='Submitting'
-            >
-              Add Blog
-            </Button>
+            <Flex justifyContent='center' mt={4} mb={6}>
+              <Button
+                colorScheme='blue'
+                onClick={handleSubmit}
+                isLoading={isSubmitting}
+                loadingText='Submitting'
+                width={{ base: '100%', sm: 'auto' }}
+              >
+                Add Blog
+              </Button>
+            </Flex>
           </Stack>
         </Box>
-      </Box>
+      </Container>
 
       <Footer />
     </>
