@@ -5,6 +5,7 @@ import {
   SearchBar,
   Appbar,
   HomeBlogs,
+  Footer,
 } from '../components/ui/index.js';
 import { useEffect, useState } from 'react';
 
@@ -128,6 +129,7 @@ export default function Hero() {
       </Container>
       <SearchBar />
       <HomeBlogs />
+      <Footer />
     </>
   );
 }

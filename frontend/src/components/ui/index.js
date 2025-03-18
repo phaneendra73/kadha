@@ -7,3 +7,4 @@ export { default as Footer } from './Footer';
 export { Skeleton, SkeletonCircle, SkeletonText } from './skeleton';
 export { default as HomeBlogs } from './HomeBlogs';
 export { default as BlogsSkeleton } from './BlogsSkeleton';
+export { Toaster, toaster } from './toaster';

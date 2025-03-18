@@ -4,9 +4,7 @@ import remarkHtml from 'remark-html';
 export const extractHeaders = async (markdown) => {
   try {
     // Convert Markdown to HTML using remark
-    const file = await remark()
-      .use(remarkHtml) // Converts markdown to HTML (AST parsing)
-      .process(markdown);
+    const file = await remark().use(remarkHtml).process(markdown);
 
     // The HTML content
     const htmlContent = String(file);

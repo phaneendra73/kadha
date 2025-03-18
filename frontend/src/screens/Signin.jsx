@@ -33,7 +33,7 @@ const Signin = () => {
       });
 
       // Redirect to the Editor page (use navigate instead of history.push)
-      navigate('/Editor'); // Correct use of navigate
+      navigate('/Admin'); // Correct use of navigate
     } catch (error) {
       toaster.create({
         title: 'Error signing in',

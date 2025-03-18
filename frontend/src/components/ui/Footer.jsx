@@ -1,8 +1,8 @@
 import { Box, Flex, Text, Button, Link } from '@chakra-ui/react';
 import {
-  FaFacebook,
+  //FaFacebook,
   FaTwitter,
-  FaInstagram,
+  //FaInstagram,
   FaLinkedin,
   FaGithub,
 } from 'react-icons/fa';
@@ -35,25 +35,22 @@ const Footer = () => {
           &copy; {new Date().getFullYear()} Kadha
         </Text>
         <Flex align='center' gap={4}>
-          <Link href='https://facebook.com/yourfacebookpage' target='_blank'>
+          {/* <Link href='https://facebook.com/yourfacebookpage' target='_blank'>
             <FaFacebook size={24} color={iconColor} />
-          </Link>
-          <Link href='https://twitter.com/yourtwitterhandle' target='_blank'>
+          </Link> */}
+          <Link href='https://x.com/Phaneendra73_' target='_blank'>
             <FaTwitter size={24} color={iconColor} />
           </Link>
-          <Link
+          {/* <Link
             href='https://instagram.com/yourinstagramhandle'
             target='_blank'
           >
             <FaInstagram size={24} color={iconColor} />
-          </Link>
-          <Link
-            href='https://linkedin.com/in/yourlinkedinprofile'
-            target='_blank'
-          >
+          </Link> */}
+          <Link href='http://linkedin.com/in/phaneendra73' target='_blank'>
             <FaLinkedin size={24} color={iconColor} />
           </Link>
-          <Link href='https://github.com/yourgithubusername' target='_blank'>
+          <Link href='https://github.com/phaneendra73' target='_blank'>
             <FaGithub size={24} color={iconColor} />
           </Link>
           <Button

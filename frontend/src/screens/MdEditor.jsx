@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MDEditor from '@uiw/react-markdown-editor';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -27,6 +28,24 @@ import axios from 'axios';
 import { getenv } from '../utils/getenv';
 
 export default function MdEditor() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      toaster.create({
+        title: 'Access Restricted',
+        description:
+          'Please log in to create blog posts. Only admins can add new content.',
+        type: 'warning',
+        duration: 8000,
+        isClosable: true,
+      });
+      setTimeout(() => {
+        navigate('/Admin');
+      }, 4000);
+    }
+  }, [navigate]);
+
   const EditorTheme = useColorModeValue('light', 'dark');
   const [value, setValue] = useState('**Hello world!!!**');
   const [title, setTitle] = useState('');
