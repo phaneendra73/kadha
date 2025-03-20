@@ -133,7 +133,7 @@ const Appbar = () => {
             </MenuTrigger>
 
             <MenuContent position='absolute' zIndex='999' top='100%' left='90%'>
-              <MenuItem value='Admin' onClick={() => navigate('/Admin')}>
+              <MenuItem value='Admin' onClick={() => navigate('/Signin')}>
                 Admin
               </MenuItem>
               <MenuItem value='AddPost' onClick={() => navigate('/Editor')}>
@@ -166,7 +166,7 @@ const Appbar = () => {
               <Button w='100%' mb={4} onClick={() => navigate('/')}>
                 Home
               </Button>
-              <Button w='100%' mb={4} onClick={() => navigate('/Admin')}>
+              <Button w='100%' mb={4} onClick={() => navigate('/Signin')}>
                 Admin
               </Button>
               <Button w='100%' mb={4} onClick={() => navigate('/Editor')}>

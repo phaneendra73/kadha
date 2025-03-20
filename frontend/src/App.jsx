@@ -7,6 +7,7 @@ import MdReader from './screens/MdReader';
 import Signin from './screens/Signin';
 import NotFound from './screens/NotFound';
 import AdminPage from './screens/AdminPage';
+import TagManager from './screens/TagManager';
 
 const App = () => {
   return (
@@ -15,10 +16,11 @@ const App = () => {
         <Routes>
           <Route path='/' element={<LandingPage />} />
           <Route path='/Read' element={<MdReader />} />
-          <Route path='/Editor' element={<MdEditor />} />
+          <Route path='/Editor/:id?' element={<MdEditor />} />
           <Route path='/BlogPosts' element={<BlogPosts />} />
           <Route path='/Signin' element={<Signin />} />
           <Route path='/Admin' element={<AdminPage />} />
+          <Route path='/Tag' element={<TagManager />} />
           <Route path='/404' element={<NotFound />} />
           <Route path='*' element={<Navigate to='/404' replace />} />
         </Routes>

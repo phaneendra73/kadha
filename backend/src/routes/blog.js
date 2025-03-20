@@ -178,9 +178,23 @@ blogRoutes.put('/edit/:id', authenticateUser, async (c) => {
 	}
 
 	try {
+		const prisma = new PrismaClient({
+			datasourceUrl: c.env.DATABASE_URL,
+			transactionOptions: {
+				timeout: 10000,
+			},
+		}).$extends(withAccelerate());
+
 		// Check if the blog exists and belongs to the user
 		const blog = await prisma.blogs.findUnique({
 			where: { id: parseInt(id) },
+			include: {
+				tags: {
+					select: {
+						tagId: true,
+					},
+				},
+			},
 		});
 
 		if (!blog) {
@@ -191,26 +205,72 @@ blogRoutes.put('/edit/:id', authenticateUser, async (c) => {
 			return c.json({ error: 'Unauthorized: You can only edit your own blogs' }, 403);
 		}
 
+		// Update blog basics
 		const updatedBlog = await prisma.blogs.update({
 			where: { id: parseInt(id) },
 			data: {
 				title,
 				imageUrl,
-				tags: {
-					connect: tagIds ? tagIds.map((tagId) => ({ id: tagId })) : [],
-				},
 			},
 		});
 
+		// Update blog content
 		const updatedBlogContent = await prisma.blogmd.update({
 			where: { blogId: parseInt(id) },
 			data: { content },
 		});
 
-		return c.json({ message: 'Blog updated successfully', updatedBlog, updatedBlogContent }, 200);
+		// Handle tags efficiently
+		if (tagIds && tagIds.length > 0) {
+			// Get existing tag IDs
+			const existingTagIds = blog.tags.map((t) => t.tagId);
+
+			// Find tags to remove (tags that exist but are not in the new tagIds)
+			const tagsToRemove = existingTagIds.filter((tagId) => !tagIds.includes(tagId));
+
+			// Find tags to add (tags that are in the new tagIds but don't exist yet)
+			const tagsToAdd = tagIds.filter((tagId) => !existingTagIds.includes(tagId));
+
+			// Remove tags that are no longer associated
+			if (tagsToRemove.length > 0) {
+				await prisma.tagsonblogs.deleteMany({
+					where: {
+						blogId: parseInt(id),
+						tagId: {
+							in: tagsToRemove,
+						},
+					},
+				});
+			}
+
+			// Add new tag associations
+			if (tagsToAdd.length > 0) {
+				await prisma.tagsonblogs.createMany({
+					data: tagsToAdd.map((tagId) => ({
+						blogId: parseInt(id),
+						tagId,
+					})),
+					skipDuplicates: true,
+				});
+			}
+		} else {
+			// If no tags provided, remove all tag associations
+			await prisma.tagsonblogs.deleteMany({
+				where: {
+					blogId: parseInt(id),
+				},
+			});
+		}
+
+		return c.json(
+			{
+				message: 'Blog updated successfully',
+			},
+			200
+		);
 	} catch (error) {
-		console.error(error);
-		return c.json({ error: 'Failed to update blog' }, 500);
+		console.error('Error updating blog:', error);
+		return c.json({ error: 'Failed to update blog', details: error.message }, 500);
 	}
 });
 
@@ -324,5 +384,114 @@ blogRoutes.get('/tags', async (c) => {
 	} catch (error) {
 		console.error(error);
 		return c.json({ error: 'Failed to fetch tags' }, 500);
+	}
+});
+
+// Add new tags route
+blogRoutes.post('/tags/create', authenticateUser, async (c) => {
+	const body = await c.req.json();
+	const { tags } = body; // Expect an array of tag names
+
+	if (!tags || !Array.isArray(tags) || tags.length === 0) {
+		return c.json({ error: 'Please provide an array of tag names' }, 400);
+	}
+
+	try {
+		const prisma = new PrismaClient({
+			datasourceUrl: c.env.DATABASE_URL,
+			transactionOptions: {
+				timeout: 10000,
+			},
+		}).$extends(withAccelerate());
+
+		// Create tags that don't exist yet
+		const results = await Promise.all(
+			tags.map(async (tagName) => {
+				// First check if the tag already exists
+				const existingTag = await prisma.tags.findUnique({
+					where: { name: tagName.trim() },
+				});
+
+				if (existingTag) {
+					return { id: existingTag.id, name: existingTag.name, created: false };
+				}
+
+				// Create the new tag if it doesn't exist
+				const newTag = await prisma.tags.create({
+					data: {
+						name: tagName.trim(),
+					},
+				});
+
+				return { id: newTag.id, name: newTag.name, created: true };
+			})
+		);
+
+		// Count how many new tags were created
+		const newTagsCount = results.filter((tag) => tag.created).length;
+
+		return c.json(
+			{
+				message: `Tags processed successfully. Created ${newTagsCount} new tags.`,
+				tags: results,
+			},
+			201
+		);
+	} catch (error) {
+		console.error('Error creating tags:', error);
+		return c.json({ error: 'Failed to create tags', details: error.message }, 500);
+	}
+});
+
+// Delete tag route
+blogRoutes.delete('/tags/:id', authenticateUser, async (c) => {
+	const tagId = parseInt(c.req.param('id')); // Get the tag ID from the route parameter
+
+	if (!tagId) {
+		return c.json({ error: 'Tag ID is required' }, 400);
+	}
+
+	try {
+		const prisma = new PrismaClient({
+			datasourceUrl: c.env.DATABASE_URL,
+			transactionOptions: {
+				timeout: 10000,
+			},
+		}).$extends(withAccelerate());
+
+		// Check if the tag exists
+		const existingTag = await prisma.tags.findUnique({
+			where: { id: parseInt(tagId) },
+		});
+
+		if (!existingTag) {
+			return c.json({ error: 'Tag not found' }, 404);
+		}
+
+		// Check if the tag is associated with any blog posts
+		const tagAssociations = await prisma.tagsonblogs.findMany({
+			where: { tagId: tagId },
+		});
+
+		// If tag is associated with blogs, prevent deletion and return an error
+		if (tagAssociations.length > 0) {
+			return c.json({ error: 'Cannot delete tag because it is associated with one or more blogs' }, 400);
+		}
+
+		// If no associations, delete the tag from the tags table
+		await prisma.tags.delete({
+			where: { id: tagId },
+		});
+
+		return c.json(
+			{
+				message: 'Tag deleted successfully',
+				tag: existingTag,
+			},
+			200
+		);
+	} catch (error) {
+		console.error('Error deleting tag:', error);
+		return c.json({ error: 'Failed to delete tag', details: error.message }, 500);
 	}
 });

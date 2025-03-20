@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Text,
@@ -28,6 +28,25 @@ import useTags from '../hooks/useTags';
 import { getenv } from '../utils/getenv';
 
 const AdminPage = () => {
+  const navigate = useNavigate();
+  const authToken = localStorage.getItem('authToken');
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  useEffect(() => {
+    if (!authToken) {
+      navigate('/Signin');
+
+      toaster.create({
+        title: 'Access Restricted',
+        description: 'Please log in to access Admin Page.',
+        type: 'warning',
+        duration: 8000,
+        isClosable: true,
+      });
+    } else {
+      setIsAuthorized(true);
+    }
+  }, [navigate, authToken]);
+
   // States for pagination and dialog
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTags, setSelectedTags] = useState([]);
@@ -38,11 +57,15 @@ const AdminPage = () => {
   // Use hooks for blogs and tags
   const { blogs, totalCount, totalPages, loading } = useBlogs(
     currentPage,
-    selectedTags
+    selectedTags,
+    '',
+    isAuthorized
   );
-  const { tags, error: tagsError, loading: tagsLoading } = useTags();
-
-  const navigate = useNavigate();
+  const {
+    tags,
+    error: tagsError,
+    loading: tagsLoading,
+  } = useTags(isAuthorized);
 
   // Get background and text colors for the page based on theme
   const bgColor = useColorModeValue('white', 'gray.800');
@@ -83,7 +106,7 @@ const AdminPage = () => {
 
   // Handle edit blog
   const handleEditBlog = (blogId) => {
-    navigate(`${baseUrl}/blog/edit/${blogId}`);
+    navigate(`/Editor/${blogId}`);
   };
 
   // Handle delete confirmation
@@ -133,9 +156,23 @@ const AdminPage = () => {
         {/* Header */}
         <Flex justifyContent='space-between' alignItems='center' mb={4}>
           <Heading size='lg'>Blog Admin</Heading>
-          <Button colorPalette='green' onClick={() => navigate('/Editor')}>
-            Add New Blog
-          </Button>
+          <Box>
+            <Button
+              colorPalette='green'
+              variant={'outline'}
+              onClick={() => navigate('/Editor')}
+              mr={2}
+            >
+              New Blog
+            </Button>
+            <Button
+              colorPalette='green'
+              variant={'outline'}
+              onClick={() => navigate('/Tag')}
+            >
+              New Tags
+            </Button>
+          </Box>
         </Flex>
 
         {/* Tag Filter Section */}
@@ -251,7 +288,7 @@ const AdminPage = () => {
                     <Table.Cell maxWidth='300px' isTruncated>
                       {blog.title}
                     </Table.Cell>
-                    <Table.Cell>{blog.author}</Table.Cell>
+                    <Table.Cell>{blog.authorId}</Table.Cell>
                     <Table.Cell>
                       <HStack spacing={1} flexWrap='wrap'>
                         {blog.tags &&
@@ -274,7 +311,7 @@ const AdminPage = () => {
                       <HStack spacing={2}>
                         <Button
                           size='sm'
-                          colorPalette='green'
+                          colorPalette='blue'
                           onClick={() => handleEditBlog(blog.id)}
                         >
                           Edit

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Input, VStack, Heading } from '@chakra-ui/react';
+import { Box, Button, Input, VStack, Heading, Flex } from '@chakra-ui/react';
 import { Toaster, toaster } from '../components/ui/toaster'; // Assuming toaster is set up properly
 import axios from 'axios';
 import { getenv } from '../utils/getenv';
+import { Appbar, Footer } from '../components/ui';
 
 const Signin = () => {
   const [email, setEmail] = useState('');
@@ -48,33 +49,48 @@ const Signin = () => {
   };
 
   return (
-    <Box maxW='md' mx='auto' mt={10} p={6} borderWidth={1} borderRadius='lg'>
-      <VStack spacing={4}>
-        <Heading size='lg'>Sign In</Heading>
-        <Toaster />
-        <Input
-          type='email'
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder='Enter your email'
-        />
-        <Input
-          type='password'
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder='Enter your password'
-        />
-
-        <Button
-          colorScheme='blue'
-          width='full'
-          onClick={handleSignin}
-          isLoading={loading}
+    <Flex direction='column' minH='90vh'>
+      <Appbar />
+      <Flex flex='1' align='center' justify='center'>
+        <Box
+          maxW='md'
+          w='full'
+          p={6}
+          borderWidth={1}
+          borderRadius='lg'
+          boxShadow='md'
         >
-          Sign In
-        </Button>
-      </VStack>
-    </Box>
+          <VStack spacing={4}>
+            <Heading size='lg'>Sign In</Heading>
+            <Toaster />
+            <Input
+              type='email'
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder='Enter your email'
+            />
+            <Input
+              type='password'
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder='Enter your password'
+            />
+            <Button
+              colorScheme='blue'
+              width='full'
+              onClick={handleSignin}
+              isLoading={loading}
+            >
+              Sign In
+            </Button>
+          </VStack>
+        </Box>
+      </Flex>
+      <Box mt='auto'>
+        {' '}
+        <Footer />
+      </Box>
+    </Flex>
   );
 };
 

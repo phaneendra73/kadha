@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getenv } from '../utils/getenv';
 
-const useBlogs = (page, selectedTags = [], searchQuery = '') => {
+const useBlogs = (
+  page,
+  selectedTags = [],
+  searchQuery = '',
+  enabled = true
+) => {
   const [blogs, setBlogs] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -10,6 +15,10 @@ const useBlogs = (page, selectedTags = [], searchQuery = '') => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log('fetcing teh blogs', enabled);
+
+    if (!enabled) return;
+    console.log('fetcing teh blogs');
     const fetchBlogs = async () => {
       const apiUrl = getenv('APIURL');
       const blogLimit = getenv('BLOGSLIMIT');
@@ -36,7 +45,7 @@ const useBlogs = (page, selectedTags = [], searchQuery = '') => {
     };
 
     fetchBlogs();
-  }, [page, selectedTags, searchQuery]); // Depend on page, selectedTags, and searchQuery
+  }, [page, selectedTags, searchQuery, enabled]); // Depend on page, selectedTags, and searchQuery
 
   return { blogs, totalCount, totalPages, loading, error };
 };

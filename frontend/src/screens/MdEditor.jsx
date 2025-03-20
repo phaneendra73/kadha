@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import MDEditor from '@uiw/react-markdown-editor';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -14,6 +14,8 @@ import {
   Container,
   useBreakpointValue,
   Flex,
+  Heading,
+  Image,
 } from '@chakra-ui/react';
 import {
   Appbar,
@@ -29,36 +31,21 @@ import { getenv } from '../utils/getenv';
 
 export default function MdEditor() {
   const navigate = useNavigate();
-  useEffect(() => {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-      toaster.create({
-        title: 'Access Restricted',
-        description:
-          'Please log in to create blog posts. Only admins can add new content.',
-        type: 'warning',
-        duration: 8000,
-        isClosable: true,
-      });
-      setTimeout(() => {
-        navigate('/Admin');
-      }, 4000);
-    }
-  }, [navigate]);
+  const { id: blogId } = useParams(); // Get blog ID from URL parameters
+  const isEditMode = Boolean(blogId);
 
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isLoading, setIsLoading] = useState(isEditMode);
+
+  // Form state
   const EditorTheme = useColorModeValue('light', 'dark');
-  const [value, setValue] = useState('**Hello world!!!**');
+  const [value, setValue] = useState('');
   const [title, setTitle] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const apiUrl = getenv('APIURL');
-
-  // Responsive values
-  const editorHeight = useBreakpointValue({ base: '50vh', md: '80vh' });
-  const editorWidth = useBreakpointValue({ base: '100%', md: '98vw' });
-  const containerPadding = useBreakpointValue({ base: '2', md: '4' });
 
   // Fetch tags using the hook
   const {
@@ -67,12 +54,75 @@ export default function MdEditor() {
     loading: tagsLoading,
   } = useTags();
 
-  // Handle tag selection and deselection
-  const handleTagClick = (tagId, tagName) => {
-    if (selectedTags.some((tag) => tag.id === tagId)) {
-      setSelectedTags(selectedTags.filter((tag) => tag.id !== tagId)); // Deselect tag
+  useEffect(() => {
+    const fetchBlogData = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/blog/get/${blogId}`, {});
+        const blog = response.data;
+
+        setTitle(blog.title);
+        setImageUrl(blog.imageUrl || '');
+        setValue(blog.markdownContent);
+
+        // Set selected tags based on blog data (now handling tag names instead of IDs)
+        if (blog.tags && Array.isArray(blog.tags)) {
+          setSelectedTags(blog.tags);
+        }
+      } catch (error) {
+        console.error('Failed to fetch blog data:', error);
+        toaster.create({
+          title: 'Error',
+          description: 'Failed to load blog content. Please try again.',
+          type: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      toaster.create({
+        title: 'Access Restricted',
+        description:
+          'Please log in to manage blog posts. Only admins can modify content.',
+        type: 'warning',
+        duration: 8000,
+        isClosable: true,
+      });
+      setTimeout(() => {
+        navigate('/Admin');
+      }, 4000);
     } else {
-      setSelectedTags([...selectedTags, { id: tagId, name: tagName }]); // Select tag
+      setIsAuthorized(true);
+
+      // If in edit mode, fetch the blog data
+      if (isEditMode) {
+        fetchBlogData();
+      } else {
+        setValue('**Hello world!!!**'); // Default content for new blog
+        setIsLoading(false);
+      }
+    }
+  }, [navigate, blogId, isEditMode, apiUrl]);
+
+  // Responsive values - Adjusted for better UI
+  const editorHeight = useBreakpointValue({ base: '50vh', md: '70vh' });
+  const containerMaxWidth = useBreakpointValue({
+    base: '100%',
+    md: '90vw',
+    lg: '1200px',
+  });
+  const containerPadding = useBreakpointValue({ base: '2', md: '4' });
+
+  // Handle tag selection and deselection - now using tagName instead of id
+  const handleTagClick = (tagName) => {
+    if (selectedTags.includes(tagName)) {
+      setSelectedTags(selectedTags.filter((tag) => tag !== tagName)); // Deselect tag
+    } else {
+      setSelectedTags([...selectedTags, tagName]); // Select tag
     }
   };
 
@@ -86,7 +136,7 @@ export default function MdEditor() {
     if (!localStorage.getItem('authToken')) {
       toaster.create({
         title: 'Not logged in',
-        description: 'Please log in to add a blog post.',
+        description: 'Please log in to manage blog posts.',
         type: 'error',
         duration: 3000,
         isClosable: true,
@@ -97,149 +147,249 @@ export default function MdEditor() {
     setIsSubmitting(true);
     setError('');
 
-    const authorId = 1;
+    const authorId = 1; // This could be dynamic based on user info
+
+    // Convert selected tag names to tag IDs for the API
+    const tagIds = selectedTags
+      .map((tagName) => {
+        const tagObject = fetchedTags.find((tag) => tag.name === tagName);
+        return tagObject ? tagObject.id : null;
+      })
+      .filter((id) => id !== null);
 
     // Prepare data to send in the request body
     const blogData = {
       title,
       imageUrl,
-      authorId, // Add the author's ID to the request
-      tagIds: selectedTags.map((tag) => tag.id), // Extract tag IDs from selected tags
+      authorId,
+      tagIds, // Send tag IDs to the API
       content: value,
     };
 
     try {
-      const response = await axios.post(`${apiUrl}/blog/add`, blogData, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
+      let response;
 
-      const result = response.data;
-      if (response.status === 201) {
+      if (isEditMode) {
+        // Update existing blog
+        response = await axios.put(`${apiUrl}/blog/edit/${blogId}`, blogData, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        });
+      } else {
+        // Create new blog
+        response = await axios.post(`${apiUrl}/blog/add`, blogData, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        });
+      }
+
+      if (response.status === 200 || response.status === 201) {
         toaster.create({
-          title: 'Blog Created',
-          description: 'Your blog post has been created successfully!',
+          title: isEditMode ? 'Blog Updated' : 'Blog Created',
+          description: isEditMode
+            ? 'Your blog post has been updated successfully!'
+            : 'Your blog post has been created successfully!',
           type: 'success',
           duration: 3000,
           isClosable: true,
         });
-        // Optionally, reset form fields after submission
-        setTitle('');
-        setImageUrl('');
-        setSelectedTags([]);
-        setValue('**Hello world!!!**');
+
+        // Navigate back to admin page after successful submission
+        setTimeout(() => {
+          navigate('/Admin');
+        }, 2000);
       } else {
-        setError(result.error || 'Failed to create blog');
+        setError(response.data.error || 'Failed to save blog');
       }
     } catch (error) {
-      setError('Failed to create blog');
+      setError(`Failed to ${isEditMode ? 'update' : 'create'} blog`);
       console.error(error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (!isAuthorized) {
+    return null; // Don't render until auth check is complete
+  }
+
   return (
     <>
       <Toaster />
       <Appbar />
-      <Container maxW='container.xl' px={containerPadding} py={4}>
-        <Box data-color-mode={EditorTheme}>
+      <Container maxW={containerMaxWidth} px={containerPadding} py={4}>
+        <Heading mb={6} textAlign='center'>
+          {isEditMode ? 'Edit Blog Post' : 'Create New Blog Post'}
+        </Heading>
+
+        {isLoading ? (
           <Stack spacing={4}>
-            <Field.Root>
-              <Field.Label htmlFor='title'>Title</Field.Label>
-              <Input
-                id='title'
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder='Enter blog title'
-              />
-            </Field.Root>
-
-            <Field.Root>
-              <Field.Label htmlFor='imageUrl'>Image URL</Field.Label>
-              <Input
-                id='imageUrl'
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder='Enter image URL (optional)'
-              />
-            </Field.Root>
-
-            {/* Tag Selection */}
-            <Field.Root>
-              <Field.Label htmlFor='tags'>Tags</Field.Label>
-              <Box>
-                {tagsLoading ? (
-                  <HStack spacing={2} mt={2} flexWrap='wrap'>
-                    <Skeleton height='20px' width='50px' />
-                    <Skeleton height='20px' width='50px' />
-                    <Skeleton height='20px' width='50px' />
-                  </HStack>
-                ) : tagsError ? (
-                  <Text color='red.500'>Error loading tags</Text>
-                ) : (
-                  <Flex flexWrap='wrap' gap={2}>
-                    {fetchedTags.map((tag) => (
-                      <Tag.Root
-                        key={tag.id}
-                        colorPalette={
-                          selectedTags.some((t) => t.id === tag.id)
-                            ? 'green'
-                            : 'gray'
-                        }
-                        size='md'
-                        onClick={() => handleTagClick(tag.id, tag.name)}
-                        cursor='pointer'
-                      >
-                        <TagLabel>{tag.name}</TagLabel>
-                        {selectedTags.some((t) => t.id === tag.id) && (
-                          <Tag.EndElement>
-                            <Tag.CloseTrigger
-                              onClick={() => handleTagClick(tag.id, tag.name)}
-                            />
-                          </Tag.EndElement>
-                        )}
-                      </Tag.Root>
-                    ))}
-                  </Flex>
-                )}
-              </Box>
-            </Field.Root>
-
-            {/* Markdown Editor */}
-            <Field.Root>
-              <Field.Label htmlFor='content'>Content</Field.Label>
-              <Box width='100%' overflowX='hidden'>
-                <MDEditor
-                  value={value}
-                  onChange={(val) => setValue(val)}
-                  previewoptions={{
-                    rehypePlugins: [[rehypeSanitize]],
-                  }}
-                  height={editorHeight}
-                  width={editorWidth}
-                />
-              </Box>
-            </Field.Root>
-
-            {error && <Box color='red.500'>{error}</Box>}
-
-            <Flex justifyContent='center' mt={4} mb={6}>
-              <Button
-                colorScheme='blue'
-                onClick={handleSubmit}
-                isLoading={isSubmitting}
-                loadingText='Submitting'
-                width={{ base: '100%', sm: 'auto' }}
-              >
-                Add Blog
-              </Button>
-            </Flex>
+            <Skeleton height='40px' />
+            <Skeleton height='40px' />
+            <Skeleton height='20px' width='30%' />
+            <Skeleton height='400px' />
           </Stack>
-        </Box>
+        ) : (
+          <Box data-color-mode={EditorTheme}>
+            <Stack spacing={4}>
+              <Field.Root>
+                <Field.Label htmlFor='title'>Title</Field.Label>
+                <Input
+                  id='title'
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder='Enter blog title'
+                />
+              </Field.Root>
+
+              <Field.Root>
+                <Field.Label htmlFor='imageUrl'>Image URL</Field.Label>
+                <Stack>
+                  <Input
+                    id='imageUrl'
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder='Enter image URL (optional)'
+                  />
+                  {imageUrl && (
+                    <Box
+                      mt={2}
+                      borderRadius='md'
+                      overflow='hidden'
+                      maxH='200px'
+                    >
+                      <Image
+                        src={imageUrl}
+                        alt='Blog preview'
+                        fallback={
+                          <Box p={4} bg='gray.100' textAlign='center'>
+                            Invalid image URL
+                          </Box>
+                        }
+                        maxH='200px'
+                        objectFit='contain'
+                      />
+                    </Box>
+                  )}
+                </Stack>
+              </Field.Root>
+
+              {/* Tag Selection - Now using tag names instead of IDs */}
+              <Field.Root>
+                <Field.Label htmlFor='tags'>Tags</Field.Label>
+                <Box>
+                  {tagsLoading ? (
+                    <HStack spacing={2} mt={2} flexWrap='wrap'>
+                      <Skeleton height='20px' width='50px' />
+                      <Skeleton height='20px' width='50px' />
+                      <Skeleton height='20px' width='50px' />
+                    </HStack>
+                  ) : tagsError ? (
+                    <Text color='red.500'>Error loading tags</Text>
+                  ) : (
+                    <Flex flexWrap='wrap' gap={2}>
+                      {fetchedTags.map((tag) => (
+                        <Tag.Root
+                          key={tag.id}
+                          colorPalette={
+                            selectedTags.includes(tag.name) ? 'green' : 'gray'
+                          }
+                          size='md'
+                          onClick={() => handleTagClick(tag.name)}
+                          cursor='pointer'
+                          boxShadow='sm'
+                          _hover={{
+                            transform: 'translateY(-1px)',
+                            boxShadow: 'md',
+                          }}
+                          transition='all 0.2s'
+                        >
+                          <TagLabel>{tag.name}</TagLabel>
+                          {selectedTags.includes(tag.name) && (
+                            <Tag.EndElement>
+                              <Tag.CloseTrigger
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTagClick(tag.name);
+                                }}
+                              />
+                            </Tag.EndElement>
+                          )}
+                        </Tag.Root>
+                      ))}
+                    </Flex>
+                  )}
+                </Box>
+              </Field.Root>
+
+              {/* Markdown Editor - UI fixes applied */}
+              <Field.Root>
+                <Field.Label htmlFor='content'>Content</Field.Label>
+                <Box
+                  width='100%'
+                  sx={{
+                    '.w-md-editor': {
+                      width: '100% !important',
+                      maxWidth: '100%',
+                      border: '1px solid',
+                      borderColor: 'gray.200',
+                      borderRadius: 'md',
+                    },
+                    '.w-md-editor-content': {
+                      height: editorHeight + ' !important',
+                    },
+                    '.w-md-editor-text': {
+                      minHeight: 'auto !important',
+                    },
+                    '.w-md-editor-text-pre, .w-md-editor-text-input, .w-md-editor-text-pre > code':
+                      {
+                        minHeight: 'auto !important',
+                      },
+                  }}
+                >
+                  <MDEditor
+                    value={value}
+                    onChange={(val) => setValue(val)}
+                    previewOptions={{
+                      rehypePlugins: [[rehypeSanitize]],
+                    }}
+                    height={editorHeight}
+                    style={{ width: '100%' }}
+                  />
+                </Box>
+              </Field.Root>
+
+              {error && (
+                <Box p={3} bg='red.50' color='red.500' borderRadius='md'>
+                  {error}
+                </Box>
+              )}
+
+              <Flex justifyContent='space-between' mt={4} mb={6}>
+                <Button
+                  variant='outline'
+                  onClick={() => navigate('/Admin')}
+                  width={{ base: '48%', sm: 'auto' }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  colorScheme='blue'
+                  onClick={handleSubmit}
+                  isLoading={isSubmitting}
+                  loadingText='Submitting'
+                  width={{ base: '48%', sm: 'auto' }}
+                >
+                  {isEditMode ? 'Update Blog' : 'Add Blog'}
+                </Button>
+              </Flex>
+            </Stack>
+          </Box>
+        )}
       </Container>
 
       <Footer />
