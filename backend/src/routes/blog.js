@@ -387,7 +387,7 @@ blogRoutes.get('/tags', async (c) => {
 	}
 });
 
-// Add new tags route
+//7. Add new tags route
 blogRoutes.post('/tags/create', authenticateUser, async (c) => {
 	const body = await c.req.json();
 	const { tags } = body; // Expect an array of tag names
@@ -399,9 +399,6 @@ blogRoutes.post('/tags/create', authenticateUser, async (c) => {
 	try {
 		const prisma = new PrismaClient({
 			datasourceUrl: c.env.DATABASE_URL,
-			transactionOptions: {
-				timeout: 10000,
-			},
 		}).$extends(withAccelerate());
 
 		// Create tags that don't exist yet
@@ -443,7 +440,7 @@ blogRoutes.post('/tags/create', authenticateUser, async (c) => {
 	}
 });
 
-// Delete tag route
+// 8.Delete tag route
 blogRoutes.delete('/tags/:id', authenticateUser, async (c) => {
 	const tagId = parseInt(c.req.param('id')); // Get the tag ID from the route parameter
 
@@ -454,9 +451,6 @@ blogRoutes.delete('/tags/:id', authenticateUser, async (c) => {
 	try {
 		const prisma = new PrismaClient({
 			datasourceUrl: c.env.DATABASE_URL,
-			transactionOptions: {
-				timeout: 10000,
-			},
 		}).$extends(withAccelerate());
 
 		// Check if the tag exists
@@ -493,5 +487,108 @@ blogRoutes.delete('/tags/:id', authenticateUser, async (c) => {
 	} catch (error) {
 		console.error('Error deleting tag:', error);
 		return c.json({ error: 'Failed to delete tag', details: error.message }, 500);
+	}
+});
+
+// 9. Get All Home page
+
+blogRoutes.get('/getallForadmin', authenticateUser, async (c) => {
+	try {
+		// Retrieve query parameters from the request
+		const page = parseInt(c.req.query('page')) || 1; // Default page is 1 if not provided
+		const limit = parseInt(c.req.query('limit')) || 10; // Default limit is 10 if not provided
+		const query = c.req.query('query') || ''; // Search query for the title (optional)
+		const selectedTags = c.req.query('tags') ? c.req.query('tags').split(',') : []; // Tags parameter, split by commas if present
+
+		console.log(` Admin Query: ${query}, Tags: ${selectedTags}, Page: ${page}, Limit: ${limit}`);
+
+		// Calculate the skip (pagination offset)
+		const skip = (page - 1) * limit;
+
+		// Initialize Prisma client per request with Prisma Accelerate
+		const prisma = new PrismaClient({
+			datasourceUrl: c.env.DATABASE_URL,
+		}).$extends(withAccelerate());
+
+		// Construct the query
+		let blogQuery = {
+			where: {
+				published: true, // Only published blogs
+				...(query && { title: { contains: query, mode: 'insensitive' } }), // Filter by title if query is provided
+				...(selectedTags.length > 0 && {
+					tags: {
+						some: {
+							tag: {
+								name: {
+									in: selectedTags, // Filter by selected tags
+								},
+							},
+						},
+					},
+				}),
+			},
+			skip: skip, // Skip for pagination
+			take: limit, // Limit the number of results
+			orderBy: {
+				createdAt: 'desc', // Order by createdAt, latest first
+			},
+			include: {
+				tags: {
+					select: {
+						tag: {
+							select: {
+								name: true, // Get the tag names
+							},
+						},
+					},
+				},
+			},
+		};
+
+		// Fetch blogs based on the query parameters (pagination, title search, and tag filtering)
+		const blogs = await prisma.blogs.findMany(blogQuery);
+
+		// Map the tags data for each blog and return the desired structure
+		const mappedBlogs = blogs.map((blog) => ({
+			id: blog.id,
+			title: blog.title,
+			imageUrl: blog.imageUrl,
+			createdAt: blog.createdAt,
+			updatedAt: blog.updatedAt,
+			authorId: blog.authorId,
+			published: blog.published,
+			tags: blog.tags.map((tagLink) => tagLink.tag.name), // Extract the tag names
+		}));
+
+		// Fetch the total number of blogs with published = true for pagination metadata
+		const totalBlogs = await prisma.blogs.count({
+			where: {
+				...(query && { title: { contains: query, mode: 'insensitive' } }), // Count with title search if query is provided
+				...(selectedTags.length > 0 && {
+					tags: {
+						some: {
+							tag: {
+								name: {
+									in: selectedTags, // Only count blogs filtered by selected tags
+								},
+							},
+						},
+					},
+				}),
+			},
+		});
+
+		// Return the response with the blog data and pagination information
+		return c.json({
+			blogs: mappedBlogs,
+			pagination: {
+				currentPage: page,
+				totalPages: Math.ceil(totalBlogs / limit),
+				totalCount: totalBlogs,
+			},
+		});
+	} catch (error) {
+		console.error(error); // Log the error for debugging
+		return c.json({ error: 'Failed to fetch blogs' }, 500);
 	}
 });

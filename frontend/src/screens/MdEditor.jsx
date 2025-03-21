@@ -17,12 +17,7 @@ import {
   Heading,
   Image,
 } from '@chakra-ui/react';
-import {
-  Appbar,
-  Footer,
-  useColorModeValue,
-  Skeleton,
-} from '../components/ui/index';
+import { Footer, useColorModeValue, Skeleton } from '../components/ui/index';
 import rehypeSanitize from 'rehype-sanitize';
 import useTags from '../hooks/useTags';
 import { Toaster, toaster } from '../components/ui/toaster';
@@ -220,7 +215,6 @@ export default function MdEditor() {
   return (
     <>
       <Toaster />
-      <Appbar />
       <Container maxW={containerMaxWidth} px={containerPadding} py={4}>
         <Heading mb={6} textAlign='center'>
           {isEditMode ? 'Edit Blog Post' : 'Create New Blog Post'}

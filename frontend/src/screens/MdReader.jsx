@@ -55,9 +55,8 @@ const ReadBlog = () => {
   const isMobile = useBreakpointValue({ base: true, md: false }); // Check if the screen is mobile
 
   // Theme colors
-  const headerBgColor = useColorModeValue('white', 'gray.800');
+  const headerBgColor = useColorModeValue('white', '#0d1117');
   const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
-  const tocBgColor = useColorModeValue('gray.50', 'gray.800');
   const themeColor = getenv('THEMECOLOR') || '#3182CE';
   // Fetch blog data using the ID from the API
   useEffect(() => {
@@ -156,23 +155,25 @@ const ReadBlog = () => {
     return (
       <>
         <Appbar />
-        <Container maxW='container.xl' pt={4} pb={8}>
-          <Flex direction={{ base: 'column', md: 'row' }} gap={4}>
-            <Box flex='3' p={4}>
-              <Skeleton height='60px' mb={4} />
-              <Skeleton height='250px' mb={6} />
-              <SkeletonText
-                mt={6}
-                noOfLines={8}
-                spacing={4}
-                skeletonHeight={4}
-              />
-            </Box>
-            <Box flex='1' display={{ base: 'none', md: 'block' }}>
-              <Skeleton height='300px' />
-            </Box>
-          </Flex>
-        </Container>
+        <Box pt={20}>
+          <Container maxW='container.xl' pb={8}>
+            <Flex direction={{ base: 'column', md: 'row' }} gap={4}>
+              <Box flex='3' p={4}>
+                <Skeleton height='60px' mb={4} />
+                <Skeleton height='250px' mb={6} />
+                <SkeletonText
+                  mt={6}
+                  noOfLines={8}
+                  spacing={4}
+                  skeletonHeight={4}
+                />
+              </Box>
+              <Box flex='1' display={{ base: 'none', md: 'block' }}>
+                <Skeleton height='300px' />
+              </Box>
+            </Flex>
+          </Container>
+        </Box>
         <Footer />
       </>
     );
@@ -182,7 +183,7 @@ const ReadBlog = () => {
     return (
       <>
         <Appbar />
-        <Container maxW='container.xl' py={10}>
+        <Container maxW='container.xl' pt={20} py={10}>
           <Box textAlign='center' py={10} px={6}>
             <Heading as='h2' size='xl'>
               Blog not found
@@ -211,311 +212,322 @@ const ReadBlog = () => {
   return (
     <>
       <Appbar />
-      <Container maxW='container.xl' py={{ base: 4, md: 6 }}>
-        <Flex
-          direction={{ base: 'column', md: 'row' }}
-          justify='space-between'
-          gap={{ base: 4, md: 6 }}
-          alignItems='flex-start'
-        >
-          {/* Mobile TOC Drawer */}
-          {isMobile && (
-            <>
+      <Box pt={20}>
+        <Container maxW='container.xl' py={{ base: 4, md: 6 }}>
+          <Flex
+            direction={{ base: 'column', md: 'row' }}
+            justify='space-between'
+            gap={{ base: 4, md: 6 }}
+            alignItems='flex-start'
+          >
+            {/* Mobile TOC Drawer */}
+            {isMobile && (
+              <>
+                <Box
+                  position='sticky'
+                  top='0'
+                  zIndex='sticky'
+                  bg={headerBgColor}
+                  py={2}
+                >
+                  <DrawerRoot isOpen={isDrawerOpen} onClose={toggleDrawer}>
+                    <DrawerBackdrop />
+                    <DrawerTrigger asChild>
+                      <IconButton
+                        aria-label='Open Table of Contents'
+                        colorScheme='blue'
+                        variant='outline'
+                        onClick={toggleDrawer}
+                        position='fixed'
+                        bottom='24px'
+                        right='24px'
+                        size='lg'
+                        rounded='full'
+                        shadow='lg'
+                        zIndex={9}
+                      >
+                        <LuTableOfContents />
+                      </IconButton>
+                    </DrawerTrigger>
+
+                    <DrawerContent>
+                      <DrawerHeader>
+                        <DrawerTitle>Table of Contents</DrawerTitle>
+                        <DrawerCloseTrigger />
+                      </DrawerHeader>
+                      <DrawerBody>
+                        {toc.length > 0 ? (
+                          <VStack align='stretch' spacing={2}>
+                            {toc.map((header, index) => (
+                              <Link
+                                key={index}
+                                href={`#${header.id}`}
+                                textDecoration='none'
+                                onClick={(e) =>
+                                  handleTocLinkClick(e, header.id)
+                                }
+                                pl={`${(header.level - 1) * 4}px`}
+                                py={2}
+                                borderLeft={`2px solid ${
+                                  activeLink === header.id
+                                    ? themeColor
+                                    : 'transparent'
+                                }`}
+                                bg={
+                                  activeLink === header.id
+                                    ? 'blue.50'
+                                    : 'transparent'
+                                }
+                                color={
+                                  activeLink === header.id
+                                    ? 'blue.600'
+                                    : 'inherit'
+                                }
+                                fontWeight={
+                                  activeLink === header.id ? 'bold' : 'normal'
+                                }
+                                _hover={{
+                                  bg: 'blue.50',
+                                  color: 'blue.600',
+                                }}
+                                transition='all 0.2s'
+                                borderRadius='md'
+                              >
+                                {header.text}
+                              </Link>
+                            ))}
+                          </VStack>
+                        ) : (
+                          <Text>No table of contents available.</Text>
+                        )}
+                      </DrawerBody>
+                      <DrawerFooter>
+                        <Text fontSize='sm' color='gray.500'>
+                          {toc.length} sections in this article
+                        </Text>
+                      </DrawerFooter>
+                    </DrawerContent>
+                  </DrawerRoot>
+                </Box>
+              </>
+            )}
+
+            {/* Main Content Section */}
+            <Box flex={{ base: '1', md: '3' }} width='100%'>
+              {/* Header Section with Blog Title, Image, and Tags */}
+              <Box
+                p={{ base: 4, md: 6 }}
+                bg={headerBgColor}
+                borderRadius='lg'
+                borderWidth='1px'
+                borderColor={headerBorderColor}
+                boxShadow='md'
+                mb={6}
+              >
+                <Flex
+                  direction={{ base: 'column', sm: 'row' }}
+                  justify='space-between'
+                  align={{ base: 'start', sm: 'center' }}
+                >
+                  {/* Left Side Content */}
+                  <Box flex='1' mr={{ base: 0, sm: 4 }}>
+                    {/* Blog Title */}
+                    <Heading as='h1' size='xl' mb={4}>
+                      {blog.title}
+                    </Heading>
+
+                    {/* Author and Date Info */}
+                    <HStack spacing={4} mb={4} wrap='wrap'>
+                      <Flex align='center'>
+                        <Text fontSize='sm' color='gray.500'>
+                          Author #{blog.authorId}
+                        </Text>
+                      </Flex>
+                      <Flex align='center'>
+                        <Box as={FaCalendarAlt} mr={2} color='gray.500' />
+                        <Text fontSize='sm' color='gray.500'>
+                          {new Date(blog.createdAt).toLocaleDateString(
+                            'en-US',
+                            {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            }
+                          )}
+                        </Text>
+                      </Flex>
+                      <Badge colorPalette='blue' variant='subtle' px={2} py={1}>
+                        {readingTime} min read
+                      </Badge>
+                    </HStack>
+
+                    {/* Tags */}
+                    <Flex wrap='wrap' gap={2} mt={4}>
+                      {blog.tags &&
+                        blog.tags.map((tag, tagIndex) => (
+                          <Tag.Root
+                            key={tagIndex}
+                            size='lg'
+                            colorPalette='green'
+                            px={3}
+                          >
+                            {tag}
+                          </Tag.Root>
+                        ))}
+                    </Flex>
+                  </Box>
+
+                  {/* Right Side Image */}
+                  <Box
+                    width={{ base: '100%', sm: '120px' }}
+                    height={{ base: '120px', sm: '120px' }}
+                    mt={{ base: 4, sm: 0 }}
+                    borderRadius='10px'
+                    bg='gray.200'
+                    overflow='hidden'
+                    flexShrink={0}
+                  >
+                    {blog.imageUrl ? (
+                      <Image
+                        src={blog.imageUrl}
+                        alt={blog.title}
+                        objectFit='cover'
+                        width='100%'
+                        height='100%'
+                        borderRadius='10px'
+                      />
+                    ) : (
+                      <Flex
+                        width='100%'
+                        height='100%'
+                        justify='center'
+                        align='center'
+                        bg='teal.500'
+                      >
+                        <Text
+                          fontSize='3xl'
+                          color='white'
+                          fontWeight='bold'
+                          textAlign='center'
+                        >
+                          {blog.title[0]}
+                        </Text>
+                      </Flex>
+                    )}
+                  </Box>
+                </Flex>
+              </Box>
+
+              <Box mb={6} />
+
+              {/* Markdown Content Section */}
+              <Box
+                width='100%'
+                p={{ base: 4, md: 6 }}
+                borderWidth='1px'
+                borderRadius='lg'
+                boxShadow='md'
+                bg={headerBgColor}
+                data-color-mode={ReaderTheme}
+                className='markdown-content'
+                minHeight='500px'
+                overflowX='auto'
+                onScroll={handleScroll}
+                mb={'6'}
+              >
+                <MarkdownEditor.Markdown
+                  source={blog.markdownContent || ''}
+                  remarkRehypeOptions={rehypeSanitize}
+                  urlTransform={(url) => {
+                    // Check if it's an internal anchor link (starts with #)
+                    if (url && url.startsWith('#')) {
+                      // Get the current hash router path and query parameters
+                      const hashRoutePart = window.location.hash.split('?')[0];
+                      const queryParams = window.location.hash.includes('?')
+                        ? '?' + window.location.hash.split('?')[1].split('#')[0]
+                        : '';
+
+                      // Return the properly formatted URL that maintains the hash router
+                      return `${hashRoutePart}${queryParams}${url}`;
+                    }
+
+                    // For external links, return unchanged
+                    return url;
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* Desktop Table of Contents (Sticky) */}
+            {!isMobile && (
               <Box
                 position='sticky'
-                top='0'
-                zIndex='sticky'
+                top='20px'
+                flex={{ base: '1', md: '1' }}
+                maxW={{ md: '300px' }}
+                p={4}
+                borderWidth='1px'
+                borderRadius='lg'
+                boxShadow='md'
                 bg={headerBgColor}
-                py={2}
+                height='fit-content'
+                maxHeight='calc(100vh - 100px)'
+                overflowY='auto'
+                alignSelf='flex-start'
               >
-                <DrawerRoot isOpen={isDrawerOpen} onClose={toggleDrawer}>
-                  <DrawerBackdrop />
-                  <DrawerTrigger asChild>
-                    <IconButton
-                      aria-label='Open Table of Contents'
-                      colorScheme='blue'
-                      variant='outline'
-                      onClick={toggleDrawer}
-                      position='fixed'
-                      bottom='24px'
-                      right='24px'
-                      size='lg'
-                      rounded='full'
-                      shadow='lg'
-                      zIndex={9}
-                    >
-                      <LuTableOfContents />
-                    </IconButton>
-                  </DrawerTrigger>
-
-                  <DrawerContent>
-                    <DrawerHeader>
-                      <DrawerTitle>Table of Contents</DrawerTitle>
-                      <DrawerCloseTrigger />
-                    </DrawerHeader>
-                    <DrawerBody>
-                      {toc.length > 0 ? (
-                        <VStack align='stretch' spacing={2}>
-                          {toc.map((header, index) => (
-                            <Link
-                              key={index}
-                              href={`#${header.id}`}
-                              textDecoration='none'
-                              onClick={(e) => handleTocLinkClick(e, header.id)}
-                              pl={`${(header.level - 1) * 4}px`}
-                              py={2}
-                              borderLeft={`2px solid ${
-                                activeLink === header.id
-                                  ? themeColor
-                                  : 'transparent'
-                              }`}
-                              bg={
-                                activeLink === header.id
-                                  ? 'blue.50'
-                                  : 'transparent'
-                              }
-                              color={
-                                activeLink === header.id
-                                  ? 'blue.600'
-                                  : 'inherit'
-                              }
-                              fontWeight={
-                                activeLink === header.id ? 'bold' : 'normal'
-                              }
-                              _hover={{
-                                bg: 'blue.50',
-                                color: 'blue.600',
-                              }}
-                              transition='all 0.2s'
-                              borderRadius='md'
-                            >
-                              {header.text}
-                            </Link>
-                          ))}
-                        </VStack>
-                      ) : (
-                        <Text>No table of contents available.</Text>
-                      )}
-                    </DrawerBody>
-                    <DrawerFooter>
-                      <Text fontSize='sm' color='gray.500'>
-                        {toc.length} sections in this article
-                      </Text>
-                    </DrawerFooter>
-                  </DrawerContent>
-                </DrawerRoot>
-              </Box>
-            </>
-          )}
-
-          {/* Main Content Section */}
-          <Box flex={{ base: '1', md: '3' }} width='100%'>
-            {/* Header Section with Blog Title, Image, and Tags */}
-            <Box
-              p={{ base: 4, md: 6 }}
-              bg={headerBgColor}
-              borderRadius='lg'
-              borderWidth='1px'
-              borderColor={headerBorderColor}
-              boxShadow='md'
-              mb={6}
-            >
-              <Flex
-                direction={{ base: 'column', sm: 'row' }}
-                justify='space-between'
-                align={{ base: 'start', sm: 'center' }}
-              >
-                {/* Left Side Content */}
-                <Box flex='1' mr={{ base: 0, sm: 4 }}>
-                  {/* Blog Title */}
-                  <Heading as='h1' size='xl' mb={4}>
-                    {blog.title}
-                  </Heading>
-
-                  {/* Author and Date Info */}
-                  <HStack spacing={4} mb={4} wrap='wrap'>
-                    <Flex align='center'>
-                      <Text fontSize='sm' color='gray.500'>
-                        Author #{blog.authorId}
-                      </Text>
-                    </Flex>
-                    <Flex align='center'>
-                      <Box as={FaCalendarAlt} mr={2} color='gray.500' />
-                      <Text fontSize='sm' color='gray.500'>
-                        {new Date(blog.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </Text>
-                    </Flex>
-                    <Badge colorPalette='blue' variant='subtle' px={2} py={1}>
-                      {readingTime} min read
-                    </Badge>
-                  </HStack>
-
-                  {/* Tags */}
-                  <Flex wrap='wrap' gap={2} mt={4}>
-                    {blog.tags &&
-                      blog.tags.map((tag, tagIndex) => (
-                        <Tag.Root
-                          key={tagIndex}
-                          size='lg'
-                          colorPalette='green'
-                          px={3}
-                        >
-                          {tag}
-                        </Tag.Root>
-                      ))}
-                  </Flex>
-                </Box>
-
-                {/* Right Side Image */}
-                <Box
-                  width={{ base: '100%', sm: '120px' }}
-                  height={{ base: '120px', sm: '120px' }}
-                  mt={{ base: 4, sm: 0 }}
-                  borderRadius='10px'
-                  bg='gray.200'
-                  overflow='hidden'
-                  flexShrink={0}
+                <Heading
+                  as='h3'
+                  size='md'
+                  mb={4}
+                  pb={2}
+                  borderBottom='1px solid'
+                  borderColor='gray.200'
                 >
-                  {blog.imageUrl ? (
-                    <Image
-                      src={blog.imageUrl}
-                      alt={blog.title}
-                      objectFit='cover'
-                      width='100%'
-                      height='100%'
-                      borderRadius='10px'
-                    />
-                  ) : (
-                    <Flex
-                      width='100%'
-                      height='100%'
-                      justify='center'
-                      align='center'
-                      bg='teal.500'
-                    >
-                      <Text
-                        fontSize='3xl'
-                        color='white'
-                        fontWeight='bold'
-                        textAlign='center'
+                  Table of Contents
+                </Heading>
+                {toc.length > 0 ? (
+                  <VStack align='stretch' spacing={1}>
+                    {toc.map((header, index) => (
+                      <Link
+                        key={index}
+                        href={`#${header.id}`}
+                        textDecoration='none'
+                        onClick={(e) => handleTocLinkClick(e, header.id)}
+                        pl={`${(header.level - 1) * 4}px`}
+                        py={2}
+                        borderLeft={`2px solid ${
+                          activeLink === header.id ? themeColor : 'transparent'
+                        }`}
+                        bg={
+                          activeLink === header.id ? 'blue.50' : 'transparent'
+                        }
+                        color={
+                          activeLink === header.id ? 'blue.600' : 'inherit'
+                        }
+                        fontWeight={
+                          activeLink === header.id ? 'medium' : 'normal'
+                        }
+                        fontSize={`${16 - (header.level - 1) * 1}px`}
+                        _hover={{
+                          bg: 'blue.50',
+                          color: 'blue.600',
+                        }}
+                        transition='all 0.2s'
+                        borderRadius='md'
                       >
-                        {blog.title[0]}
-                      </Text>
-                    </Flex>
-                  )}
-                </Box>
-              </Flex>
-            </Box>
-
-            <Box mb={6} />
-
-            {/* Markdown Content Section */}
-            <Box
-              width='100%'
-              p={{ base: 4, md: 6 }}
-              borderWidth='1px'
-              borderRadius='lg'
-              boxShadow='md'
-              bg={headerBgColor}
-              data-color-mode={ReaderTheme}
-              className='markdown-content'
-              minHeight='500px'
-              overflowX='auto'
-              onScroll={handleScroll}
-              mb={'6'}
-            >
-              <MarkdownEditor.Markdown
-                source={blog.markdownContent || ''}
-                remarkRehypeOptions={rehypeSanitize}
-                urlTransform={(url) => {
-                  // Check if it's an internal anchor link (starts with #)
-                  if (url && url.startsWith('#')) {
-                    // Get the current hash router path and query parameters
-                    const hashRoutePart = window.location.hash.split('?')[0];
-                    const queryParams = window.location.hash.includes('?')
-                      ? '?' + window.location.hash.split('?')[1].split('#')[0]
-                      : '';
-
-                    // Return the properly formatted URL that maintains the hash router
-                    return `${hashRoutePart}${queryParams}${url}`;
-                  }
-
-                  // For external links, return unchanged
-                  return url;
-                }}
-              />
-            </Box>
-          </Box>
-
-          {/* Desktop Table of Contents (Sticky) */}
-          {!isMobile && (
-            <Box
-              position='sticky'
-              top='20px'
-              flex={{ base: '1', md: '1' }}
-              maxW={{ md: '300px' }}
-              p={4}
-              borderWidth='1px'
-              borderRadius='lg'
-              boxShadow='md'
-              bg={tocBgColor}
-              height='fit-content'
-              maxHeight='calc(100vh - 100px)'
-              overflowY='auto'
-              alignSelf='flex-start'
-            >
-              <Heading
-                as='h3'
-                size='md'
-                mb={4}
-                pb={2}
-                borderBottom='1px solid'
-                borderColor='gray.200'
-              >
-                Table of Contents
-              </Heading>
-              {toc.length > 0 ? (
-                <VStack align='stretch' spacing={1}>
-                  {toc.map((header, index) => (
-                    <Link
-                      key={index}
-                      href={`#${header.id}`}
-                      textDecoration='none'
-                      onClick={(e) => handleTocLinkClick(e, header.id)}
-                      pl={`${(header.level - 1) * 4}px`}
-                      py={2}
-                      borderLeft={`2px solid ${
-                        activeLink === header.id ? themeColor : 'transparent'
-                      }`}
-                      bg={activeLink === header.id ? 'blue.50' : 'transparent'}
-                      color={activeLink === header.id ? 'blue.600' : 'inherit'}
-                      fontWeight={
-                        activeLink === header.id ? 'medium' : 'normal'
-                      }
-                      fontSize={`${16 - (header.level - 1) * 1}px`}
-                      _hover={{
-                        bg: 'blue.50',
-                        color: 'blue.600',
-                      }}
-                      transition='all 0.2s'
-                      borderRadius='md'
-                    >
-                      {header.text}
-                    </Link>
-                  ))}
-                </VStack>
-              ) : (
-                <Text>No table of contents available.</Text>
-              )}
-            </Box>
-          )}
-        </Flex>
-        <Footer />
-      </Container>
+                        {header.text}
+                      </Link>
+                    ))}
+                  </VStack>
+                ) : (
+                  <Text>No table of contents available.</Text>
+                )}
+              </Box>
+            )}
+          </Flex>
+          <Footer />
+        </Container>
+      </Box>
     </>
   );
 };

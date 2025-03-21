@@ -9,7 +9,6 @@ import {
   Heading,
   Dialog,
   Portal,
-  CloseButton,
   Table,
   Skeleton,
   Tag,
@@ -109,6 +108,10 @@ const AdminPage = () => {
     navigate(`/Editor/${blogId}`);
   };
 
+  const handleReadBlog = (blogId) => {
+    navigate(`/Read/?id=${blogId}`);
+  };
+
   // Handle delete confirmation
   const handleDeleteConfirm = (blog) => {
     setSelectedBlog(blog);
@@ -152,7 +155,13 @@ const AdminPage = () => {
     <>
       <Appbar />
       <Toaster />
-      <Box width={{ base: '95%', md: '90%' }} mx='auto' p={4}>
+      <Box
+        width={{ base: '95%', md: '90%' }}
+        mx='auto'
+        p={4}
+        pt='20'
+        minH='93vh'
+      >
         {/* Header */}
         <Flex justifyContent='space-between' alignItems='center' mb={4}>
           <Heading size='lg'>Blog Admin</Heading>
@@ -312,10 +321,18 @@ const AdminPage = () => {
                         <Button
                           size='sm'
                           colorPalette='blue'
+                          onClick={() => handleReadBlog(blog.id)}
+                        >
+                          Read
+                        </Button>
+                        <Button
+                          size='sm'
+                          colorPalette='blue'
                           onClick={() => handleEditBlog(blog.id)}
                         >
                           Edit
                         </Button>
+
                         <Button
                           size='sm'
                           colorPalette='red'
@@ -388,12 +405,6 @@ const AdminPage = () => {
                       Delete
                     </Button>
                   </Dialog.Footer>
-                  <Dialog.CloseTrigger asChild>
-                    <CloseButton
-                      size='sm'
-                      onClick={() => setIsDialogOpen(false)}
-                    />
-                  </Dialog.CloseTrigger>
                 </Dialog.Content>
               </Dialog.Positioner>
             </Portal>

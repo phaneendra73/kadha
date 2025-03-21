@@ -15,10 +15,7 @@ const useBlogs = (
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log('fetcing teh blogs', enabled);
-
     if (!enabled) return;
-    console.log('fetcing teh blogs');
     const fetchBlogs = async () => {
       const apiUrl = getenv('APIURL');
       const blogLimit = getenv('BLOGSLIMIT');

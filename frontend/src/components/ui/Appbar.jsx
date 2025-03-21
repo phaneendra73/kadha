@@ -96,7 +96,6 @@ const Appbar = () => {
                 borderRadius: '50px',
                 position: 'relative',
                 cursor: 'pointer',
-                opacity: '75%',
               }}
             >
               <Switch.HiddenInput /> {/* For accessibility */}
@@ -121,13 +120,24 @@ const Appbar = () => {
               color={colorMode === 'dark' ? 'green.400' : 'gray.400'}
             />
           </Box>
-          <Button onClick={() => navigate('/')} variant='outline'>
+          <Button
+            onClick={() => navigate('/')}
+            variant='outline'
+            borderColor={textColor}
+            color={textColor}
+            size='sm'
+          >
             Home
           </Button>
 
           <MenuRoot placement='bottom-end'>
             <MenuTrigger asChild>
-              <Button variant='outline' size='sm'>
+              <Button
+                variant='outline'
+                size='sm'
+                borderColor={textColor}
+                color={textColor}
+              >
                 More
               </Button>
             </MenuTrigger>
@@ -163,7 +173,14 @@ const Appbar = () => {
               <DrawerTitle>Menu</DrawerTitle>
             </DrawerHeader>
             <DrawerBody>
-              <Button w='100%' mb={4} onClick={() => navigate('/')}>
+              <Button
+                variant='outline'
+                w='100%'
+                mb={4}
+                borderColor={textColor}
+                onClick={() => navigate('/')}
+                color={textColor}
+              >
                 Home
               </Button>
               <Button w='100%' mb={4} onClick={() => navigate('/Signin')}>

@@ -102,7 +102,7 @@ const HomeBlogs = () => {
                 mb={2}
                 transition='background-color 0.3s ease'
               >
-                <Tag.Label>{tag.name}</Tag.Label>
+                <Tag.Label fontWeight='bold'>{tag.name}</Tag.Label>
 
                 {/* Show close button if the tag is selected */}
                 {selectedTags.includes(tag.name) && (

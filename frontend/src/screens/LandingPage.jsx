@@ -68,7 +68,7 @@ export default function Hero() {
         justifyContent='flex-start'
         alignItems='center'
         overflow='hidden'
-        pt={6}
+        pt={20}
       >
         {/* Main Hero Content */}
         <motion.div
