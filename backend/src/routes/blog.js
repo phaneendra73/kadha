@@ -300,17 +300,19 @@ blogRoutes.delete('/delete/:id', authenticateUser, async (c) => {
 			return c.json({ error: 'Unauthorized: You can only delete your own blogs' }, 403);
 		}
 
+		// Instead of deleting, toggle the published state
 		await prisma.blogs.update({
 			where: { id: parseInt(id) },
 			data: {
-				published: false,
+				published: !blog.published, // Toggle the published status
 			},
 		});
 
-		return c.json({ message: 'Blog deleted successfully' }, 200);
+		const action = blog.published ? 'unpublished' : 'published';
+		return c.json({ message: `Blog ${action} successfully` }, 200);
 	} catch (error) {
 		console.error(error);
-		return c.json({ error: 'Failed to delete blog' }, 500);
+		return c.json({ error: 'Failed to update blog publication status' }, 500);
 	}
 });
 // 5. get blog ruote fro user to read
@@ -513,7 +515,6 @@ blogRoutes.get('/getallForadmin', authenticateUser, async (c) => {
 		// Construct the query
 		let blogQuery = {
 			where: {
-				published: true, // Only published blogs
 				...(query && { title: { contains: query, mode: 'insensitive' } }), // Filter by title if query is provided
 				...(selectedTags.length > 0 && {
 					tags: {

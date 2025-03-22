@@ -21,11 +21,15 @@ import {
   Toaster,
   Appbar,
   Footer,
+  TableSkeleton,
 } from '../components/ui/index';
-import useBlogs from '../hooks/useBlogs';
+import useAdminBlogs from '../hooks/useAdminBlogs';
 import useTags from '../hooks/useTags';
 import { getenv } from '../utils/getenv';
-
+import { FaReadme } from 'react-icons/fa';
+import { MdEditNote } from 'react-icons/md';
+import { GoCloudOffline } from 'react-icons/go';
+import { BsCloudUpload } from 'react-icons/bs';
 const AdminPage = () => {
   const navigate = useNavigate();
   const authToken = localStorage.getItem('authToken');
@@ -54,7 +58,7 @@ const AdminPage = () => {
   const baseUrl = getenv('APIURL');
 
   // Use hooks for blogs and tags
-  const { blogs, totalCount, totalPages, loading } = useBlogs(
+  const { blogs, totalCount, totalPages, loading } = useAdminBlogs(
     currentPage,
     selectedTags,
     '',
@@ -186,34 +190,39 @@ const AdminPage = () => {
 
         {/* Tag Filter Section */}
         <Box
-          p={4}
-          borderRadius='md'
+          p={5}
+          borderRadius='lg'
           bg={bgColor}
-          boxShadow='sm'
+          boxShadow='md'
           width={'100%'}
           mx='auto'
-          mb={4}
+          mb={5}
           display='flex'
           flexDirection='column'
           alignItems='flex-start'
+          borderWidth='1px'
+          borderColor={useColorModeValue('gray.200', 'gray.700')}
         >
           <Text
             fontSize='md'
+            fontWeight='semibold'
             color={textColor}
-            mb={2}
+            mb={3}
             textAlign='left'
             width='100%'
             fontFamily={'heading'}
+            letterSpacing='wide'
+            textTransform='uppercase'
           >
             TAG FILTER
           </Text>
 
-          <HStack spacing={4} wrap='wrap' justify='flex-start' width='100%'>
+          <HStack spacing={3} wrap='wrap' justify='flex-start' width='100%'>
             {tagsLoading ? (
               <HStack spacing={2} mt={2}>
-                <Skeleton height='20px' width='50px' color={textColor} />
-                <Skeleton height='20px' width='50px' />
-                <Skeleton height='20px' width='50px' />
+                <Skeleton height='24px' width='60px' color={textColor} />
+                <Skeleton height='24px' width='80px' />
+                <Skeleton height='24px' width='70px' />
               </HStack>
             ) : tagsError ? (
               <Text color='red.500'>Error loading tags</Text>
@@ -222,16 +231,26 @@ const AdminPage = () => {
                 <Tag.Root
                   key={tag.id}
                   size='lg'
-                  variant='solid'
+                  variant={selectedTags.includes(tag.name) ? 'solid' : 'subtle'}
                   colorPalette={
                     selectedTags.includes(tag.name) ? 'green' : 'gray'
                   }
                   onClick={() => handleTagClick(tag.name)}
                   cursor='pointer'
                   mb={2}
-                  transition='background-color 0.3s ease'
+                  transition='transform 0.2s, box-shadow 0.2s'
+                  _hover={{
+                    transform: 'translateY(-1px)',
+                    boxShadow: 'sm',
+                  }}
                 >
-                  <Tag.Label>{tag.name}</Tag.Label>
+                  <Tag.Label
+                    fontWeight={
+                      selectedTags.includes(tag.name) ? 'bold' : 'medium'
+                    }
+                  >
+                    {tag.name}
+                  </Tag.Label>
 
                   {/* Show close button if the tag is selected */}
                   {selectedTags.includes(tag.name) && (
@@ -264,27 +283,7 @@ const AdminPage = () => {
             </Table.Header>
             <Table.Body>
               {loading ? (
-                Array(5)
-                  .fill(0)
-                  .map((_, index) => (
-                    <Table.Row key={index}>
-                      <Table.Cell>
-                        <Skeleton height='20px' />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Skeleton height='20px' />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Skeleton height='20px' />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Skeleton height='20px' />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Skeleton height='20px' />
-                      </Table.Cell>
-                    </Table.Row>
-                  ))
+                <TableSkeleton />
               ) : blogs.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan={5} textAlign='center' py={4}>
@@ -320,25 +319,31 @@ const AdminPage = () => {
                       <HStack spacing={2}>
                         <Button
                           size='sm'
-                          colorPalette='blue'
+                          colorPalette='green'
                           onClick={() => handleReadBlog(blog.id)}
                         >
-                          Read
+                          <FaReadme /> Read
                         </Button>
                         <Button
                           size='sm'
                           colorPalette='blue'
                           onClick={() => handleEditBlog(blog.id)}
                         >
+                          <MdEditNote />
                           Edit
                         </Button>
 
                         <Button
                           size='sm'
-                          colorPalette='red'
+                          colorPalette={blog.published ? 'yellow' : 'red'} // Dynamically set color based on publish status
                           onClick={() => handleDeleteConfirm(blog)}
                         >
-                          Delete
+                          {blog.published ? (
+                            <GoCloudOffline />
+                          ) : (
+                            <BsCloudUpload />
+                          )}
+                          {blog.published ? 'Take Offline' : 'Go Live'}
                         </Button>
                       </HStack>
                     </Table.Cell>
@@ -383,13 +388,11 @@ const AdminPage = () => {
               <Dialog.Backdrop />
               <Dialog.Positioner>
                 <Dialog.Content>
-                  <Dialog.Header>
-                    <Dialog.Title>Delete Blog</Dialog.Title>
-                  </Dialog.Header>
                   <Dialog.Body>
                     <p>
-                      Are you sure you want to delete &quot;
-                      {selectedBlog?.title}&quot;? This action cannot be undone.
+                      Are you sure you want to{' '}
+                      {selectedBlog?.published ? 'unpublish' : 'publish'} &quot;
+                      {selectedBlog?.title}&quot;?
                     </p>
                   </Dialog.Body>
                   <Dialog.Footer>
@@ -401,8 +404,13 @@ const AdminPage = () => {
                         Cancel
                       </Button>
                     </Dialog.ActionTrigger>
-                    <Button colorPalette='red' onClick={handleDeleteBlog}>
-                      Delete
+                    <Button
+                      colorPalette={
+                        selectedBlog?.published ? 'orange' : 'green'
+                      }
+                      onClick={handleDeleteBlog}
+                    >
+                      {selectedBlog?.published ? 'Take Offline' : 'Go Live'}
                     </Button>
                   </Dialog.Footer>
                 </Dialog.Content>

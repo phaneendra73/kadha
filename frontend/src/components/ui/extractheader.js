@@ -31,9 +31,9 @@ export const extractHeaders = async (markdown) => {
       headings.push({ level, text, id });
     }
 
-    return headings;
+    return { headings, htmlContent }; // Return both the headers and the HTML content
   } catch (error) {
     console.error('Error extracting headers:', error);
-    return [];
+    return { headings: [], htmlContent: '' };
   }
 };

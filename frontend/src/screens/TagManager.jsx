@@ -116,6 +116,7 @@ export default function TagManager() {
       });
     } finally {
       setIsSubmitting(false);
+      setIsDialogOpen(false);
     }
   };
 
@@ -147,7 +148,6 @@ export default function TagManager() {
           duration: 3000,
           isClosable: true,
         });
-        setIsDialogOpen(false);
       }
     } catch (error) {
       console.error('Failed to delete tag:', error);
@@ -160,6 +160,7 @@ export default function TagManager() {
       });
     } finally {
       setIsSubmitting(false);
+      setIsDialogOpen(false);
     }
   };
 
@@ -171,7 +172,7 @@ export default function TagManager() {
     <>
       <Toaster />
       <Appbar />
-      <Container maxW='container.xl' py={8}>
+      <Container maxW='container.xl' py={8} mt={20} minH={'95vh'}>
         <Heading mb={6} textAlign='center'>
           Tag Management
         </Heading>
@@ -271,8 +272,7 @@ export default function TagManager() {
                         </Tag.Root>
                         <Button
                           size='sm'
-                          colorScheme='red'
-                          variant='ghost'
+                          colorPalette='red'
                           onClick={() => openDeleteDialog(tag)}
                         >
                           Delete

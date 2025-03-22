@@ -23,6 +23,7 @@ import {
   Footer,
   useColorModeValue,
   SkeletonText,
+  HtmlToPdf,
 } from '../components/ui/index';
 import { extractHeaders } from '../components/ui/extractheader';
 import { LuTableOfContents } from 'react-icons/lu';
@@ -39,7 +40,6 @@ import {
   DrawerFooter,
 } from '../components/ui/drawer';
 import { getenv } from '../utils/getenv';
-
 const ReadBlog = () => {
   const location = useLocation();
 
@@ -73,8 +73,11 @@ const ReadBlog = () => {
 
         // Parse the markdown content to extract headers for TOC
         if (data.markdownContent) {
-          const headers = await extractHeaders(data.markdownContent);
-          setToc(headers);
+          const { headings, htmlContent } = await extractHeaders(
+            data.markdownContent
+          );
+          setToc(headings);
+          console.log(htmlContent);
         }
       } catch (error) {
         console.error('Failed to fetch blog data:', error);
@@ -359,6 +362,7 @@ const ReadBlog = () => {
                       <Badge colorPalette='blue' variant='subtle' px={2} py={1}>
                         {readingTime} min read
                       </Badge>
+                      <HtmlToPdf filename={blog.title} />
                     </HStack>
 
                     {/* Tags */}

@@ -58,49 +58,63 @@ const HomeBlogs = () => {
     <Box width={{ base: '90%', sm: '80%', md: '70%' }} mx='auto' p={6}>
       {/* Tag Filter Section */}
       <Box
-        p={2}
-        borderRadius='md'
+        p={4}
+        borderRadius='lg'
         bg={bgColor}
-        boxShadow='sm'
-        width={'96%'}
+        boxShadow='md'
+        width={'98%'}
         mx='auto'
         display='flex'
         flexDirection='column'
         alignItems='flex-start'
+        borderWidth='1px'
+        borderColor={useColorModeValue('gray.200', 'gray.700')}
+        transition='all 0.2s'
+        _hover={{ boxShadow: 'lg' }}
       >
         <Text
           fontSize='md'
+          fontWeight='bold'
           color={textColor}
-          mb={2}
+          mb={3}
           textAlign='left'
           width='100%'
           fontFamily={'heading'}
+          letterSpacing='wide'
+          textTransform='uppercase'
         >
           TAG FILTER
         </Text>
 
-        <HStack spacing={4} wrap='wrap' justify='flex-start' width='100%'>
+        <HStack spacing={3} wrap='wrap' justify='flex-start' width='100%'>
           {tagsLoading ? (
             <HStack spacing={2} mt={2}>
-              <Skeleton height='20px' width='50px' color={textColor} />
-              <Skeleton height='20px' width='50px' />
-              <Skeleton height='20px' width='50px' />
+              <Skeleton height='24px' width='60px' color={textColor} />
+              <Skeleton height='24px' width='75px' />
+              <Skeleton height='24px' width='50px' />
+              <Skeleton height='24px' width='65px' />
             </HStack>
           ) : tagsError ? (
-            <Text color='red.500'>Error loading tags</Text>
+            <Text color='red.500' fontWeight='medium'>
+              Error loading tags
+            </Text>
           ) : (
             tags.map((tag) => (
               <Tag.Root
                 key={tag.id}
                 size='lg'
-                variant='solid'
+                variant={selectedTags.includes(tag.name) ? 'solid' : 'subtle'}
                 colorPalette={
                   selectedTags.includes(tag.name) ? 'green' : 'gray'
                 }
                 onClick={() => handleTagClick(tag.name)}
                 cursor='pointer'
                 mb={2}
-                transition='background-color 0.3s ease'
+                transition='transform 0.2s, box-shadow 0.2s'
+                _hover={{
+                  transform: 'translateY(-2px)',
+                  boxShadow: 'sm',
+                }}
               >
                 <Tag.Label fontWeight='bold'>{tag.name}</Tag.Label>
 
@@ -108,7 +122,10 @@ const HomeBlogs = () => {
                 {selectedTags.includes(tag.name) && (
                   <Tag.EndElement>
                     <Tag.CloseTrigger
-                      onClick={() => handleTagRemove(tag.name)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTagRemove(tag.name);
+                      }}
                     />
                   </Tag.EndElement>
                 )}

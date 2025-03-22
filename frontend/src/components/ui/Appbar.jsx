@@ -25,7 +25,6 @@ import { useNavigate } from 'react-router-dom';
 import { useColorMode, useColorModeValue } from './color-mode';
 import { GoSun, GoMoon } from 'react-icons/go';
 import { HiMenuAlt3 } from 'react-icons/hi';
-import { getenv } from '../../utils/getenv';
 const Appbar = () => {
   const { toggleColorMode, colorMode } = useColorMode();
   const navigate = useNavigate();
@@ -77,45 +76,28 @@ const Appbar = () => {
             {/* Sun Icon */}
             <Icon
               as={GoSun}
-              boxSize={5}
+              boxSize={6}
               transition='all 0.3s'
               color={colorMode === 'dark' ? 'gray.400' : 'green.400'}
             />
 
             {/* Switch */}
             <Switch.Root
-              checked={colorMode === 'dark'} // Control switch based on isDarkMode
+              checked={colorMode === 'dark'}
+              colorPalette={'green'}
+              size='lg'
               onCheckedChange={() => {
                 toggleColorMode();
               }}
-              style={{
-                width: '50px',
-                height: '25px',
-                backgroundColor:
-                  colorMode === 'dark' ? getenv('THEMECOLOR') : '#B5B5B5',
-                borderRadius: '50px',
-                position: 'relative',
-                cursor: 'pointer',
-              }}
             >
-              <Switch.HiddenInput /> {/* For accessibility */}
-              <Switch.Control
-                style={{
-                  position: 'absolute',
-                  top: '3px',
-                  left: colorMode === 'dark' ? '25px' : '3px', // Move thumb based on state
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  backgroundColor: '#fff',
-                }}
-              />
+              <Switch.HiddenInput />
+              <Switch.Control />
             </Switch.Root>
 
             {/* Moon Icon */}
             <Icon
               as={GoMoon}
-              boxSize={5}
+              boxSize={6}
               transition='all 0.3s'
               color={colorMode === 'dark' ? 'green.400' : 'gray.400'}
             />
