@@ -77,7 +77,7 @@ export default function MdEditor() {
       }
     };
 
-    const authToken = localStorage.getItem('authToken');
+    const authToken = localStorage.getItem('p73SessionData');
     if (!authToken) {
       toaster.create({
         title: 'Access Restricted',
@@ -128,7 +128,7 @@ export default function MdEditor() {
       return;
     }
 
-    if (!localStorage.getItem('authToken')) {
+    if (!localStorage.getItem('p73SessionData')) {
       toaster.create({
         title: 'Not logged in',
         description: 'Please log in to manage blog posts.',
@@ -169,7 +169,7 @@ export default function MdEditor() {
         response = await axios.put(`${apiUrl}/blog/edit/${blogId}`, blogData, {
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${localStorage.getItem('p73SessionData')}`,
           },
         });
       } else {
@@ -177,7 +177,7 @@ export default function MdEditor() {
         response = await axios.post(`${apiUrl}/blog/add`, blogData, {
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${localStorage.getItem('p73SessionData')}`,
           },
         });
       }

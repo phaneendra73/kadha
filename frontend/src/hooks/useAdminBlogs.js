@@ -41,7 +41,7 @@ const useAdminBlogs = (
         // Make the API request with auth token
         const response = await axios.get(url, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${localStorage.getItem('p73SessionData')}`,
           },
         });
 

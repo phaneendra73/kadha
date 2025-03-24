@@ -255,7 +255,7 @@ const HtmlToPdf = ({
 
   return (
     <div className='pdf-container'>
-      <Button onClick={convertToPdf} disabled={isConverting} size={'sm'}>
+      <Button onClick={convertToPdf} disabled={isConverting} size={'xs'}>
         {isConverting ? 'Processing...' : 'Download as PDF'}
       </Button>
     </div>

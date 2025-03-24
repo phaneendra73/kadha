@@ -21,16 +21,17 @@ const Signin = () => {
         password,
       });
 
-      const { jwt, message } = response.data;
+      const { jwt, message, error } = response.data;
 
       // Save JWT to localStorage
-      localStorage.setItem('authToken', jwt);
+      localStorage.setItem('p73SessionData', jwt);
 
       toaster.create({
         title: message,
         status: 'success',
         duration: 3000,
         isClosable: true,
+        description: error,
       });
 
       // Redirect to the Editor page (use navigate instead of history.push)
@@ -38,7 +39,7 @@ const Signin = () => {
     } catch (error) {
       toaster.create({
         title: 'Error signing in',
-        description: error.response?.data?.message || 'Please try again later.',
+        description: error.response?.data?.error || 'Please try again later.',
         status: 'error',
         duration: 3000,
         isClosable: true,

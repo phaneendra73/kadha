@@ -46,7 +46,7 @@ export default function TagManager() {
   // Check auth
   useEffect(() => {
     const checkAuth = async () => {
-      const authToken = localStorage.getItem('authToken');
+      const authToken = localStorage.getItem('p73SessionData');
       if (!authToken) {
         toaster.create({
           title: 'Access Restricted',
@@ -89,7 +89,7 @@ export default function TagManager() {
         {
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${localStorage.getItem('p73SessionData')}`,
           },
         }
       );
@@ -135,7 +135,7 @@ export default function TagManager() {
         `${apiUrl}/blog/tags/${selectedTag.id}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${localStorage.getItem('p73SessionData')}`,
           },
         }
       );

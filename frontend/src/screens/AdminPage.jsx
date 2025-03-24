@@ -32,7 +32,7 @@ import { GoCloudOffline } from 'react-icons/go';
 import { BsCloudUpload } from 'react-icons/bs';
 const AdminPage = () => {
   const navigate = useNavigate();
-  const authToken = localStorage.getItem('authToken');
+  const authToken = localStorage.getItem('p73SessionData');
   const [isAuthorized, setIsAuthorized] = useState(false);
   useEffect(() => {
     if (!authToken) {
@@ -128,7 +128,7 @@ const AdminPage = () => {
       await axios.delete(`${baseUrl}/blog/delete/${selectedBlog.id}`, {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          Authorization: `Bearer ${localStorage.getItem('p73SessionData')}`,
         },
       });
 
@@ -183,7 +183,7 @@ const AdminPage = () => {
               variant={'outline'}
               onClick={() => navigate('/Tag')}
             >
-              New Tags
+              Tag Manager
             </Button>
           </Box>
         </Flex>
@@ -269,89 +269,91 @@ const AdminPage = () => {
           </HStack>
         </Box>
 
-        {/* Blog List */}
         <Box borderRadius='md' bg={bgColor} boxShadow='sm' overflow='hidden'>
-          <Table.Root>
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeader>Title</Table.ColumnHeader>
-                <Table.ColumnHeader>Author</Table.ColumnHeader>
-                <Table.ColumnHeader>Tags</Table.ColumnHeader>
-                <Table.ColumnHeader>Date</Table.ColumnHeader>
-                <Table.ColumnHeader>Actions</Table.ColumnHeader>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {loading ? (
-                <TableSkeleton />
-              ) : blogs.length === 0 ? (
+          {/* Make table container scrollable horizontally on small screens */}
+          <Box overflowX='auto'>
+            <Table.Root>
+              <Table.Header>
                 <Table.Row>
-                  <Table.Cell colSpan={5} textAlign='center' py={4}>
-                    No blogs found
-                  </Table.Cell>
+                  <Table.ColumnHeader>Title</Table.ColumnHeader>
+                  <Table.ColumnHeader>Author</Table.ColumnHeader>
+                  <Table.ColumnHeader>Tags</Table.ColumnHeader>
+                  <Table.ColumnHeader>Date</Table.ColumnHeader>
+                  <Table.ColumnHeader>Actions</Table.ColumnHeader>
                 </Table.Row>
-              ) : (
-                blogs.map((blog) => (
-                  <Table.Row key={blog.id}>
-                    <Table.Cell maxWidth='300px' isTruncated>
-                      {blog.title}
-                    </Table.Cell>
-                    <Table.Cell>{blog.authorId}</Table.Cell>
-                    <Table.Cell>
-                      <HStack spacing={1} flexWrap='wrap'>
-                        {blog.tags &&
-                          blog.tags.slice(0, 2).map((tag, index) => (
-                            <Badge key={index} colorPalette='green' mr={1}>
-                              {tag}
-                            </Badge>
-                          ))}
-                        {blog.tags && blog.tags.length > 2 && (
-                          <Badge colorPalette='gray'>
-                            +{blog.tags.length - 2}
-                          </Badge>
-                        )}
-                      </HStack>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {new Date(blog.createdAt).toLocaleDateString()}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <HStack spacing={2}>
-                        <Button
-                          size='sm'
-                          colorPalette='green'
-                          onClick={() => handleReadBlog(blog.id)}
-                        >
-                          <FaReadme /> Read
-                        </Button>
-                        <Button
-                          size='sm'
-                          colorPalette='blue'
-                          onClick={() => handleEditBlog(blog.id)}
-                        >
-                          <MdEditNote />
-                          Edit
-                        </Button>
-
-                        <Button
-                          size='sm'
-                          colorPalette={blog.published ? 'yellow' : 'red'} // Dynamically set color based on publish status
-                          onClick={() => handleDeleteConfirm(blog)}
-                        >
-                          {blog.published ? (
-                            <GoCloudOffline />
-                          ) : (
-                            <BsCloudUpload />
-                          )}
-                          {blog.published ? 'Take Offline' : 'Go Live'}
-                        </Button>
-                      </HStack>
+              </Table.Header>
+              <Table.Body>
+                {loading ? (
+                  <TableSkeleton />
+                ) : blogs.length === 0 ? (
+                  <Table.Row>
+                    <Table.Cell colSpan={5} textAlign='center' py={4}>
+                      No blogs found
                     </Table.Cell>
                   </Table.Row>
-                ))
-              )}
-            </Table.Body>
-          </Table.Root>
+                ) : (
+                  blogs.map((blog) => (
+                    <Table.Row key={blog.id}>
+                      <Table.Cell maxWidth='300px' isTruncated>
+                        {blog.title}
+                      </Table.Cell>
+                      <Table.Cell>{blog.authorId}</Table.Cell>
+                      <Table.Cell>
+                        <HStack spacing={1} flexWrap='wrap'>
+                          {blog.tags &&
+                            blog.tags.slice(0, 2).map((tag, index) => (
+                              <Badge key={index} colorPalette='green' mr={1}>
+                                {tag}
+                              </Badge>
+                            ))}
+                          {blog.tags && blog.tags.length > 2 && (
+                            <Badge colorPalette='gray'>
+                              +{blog.tags.length - 2}
+                            </Badge>
+                          )}
+                        </HStack>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {new Date(blog.createdAt).toLocaleDateString()}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <HStack spacing={2}>
+                          <Button
+                            size='sm'
+                            colorPalette='green'
+                            onClick={() => handleReadBlog(blog.id)}
+                          >
+                            <FaReadme /> Read
+                          </Button>
+                          <Button
+                            size='sm'
+                            colorPalette='blue'
+                            onClick={() => handleEditBlog(blog.id)}
+                          >
+                            <MdEditNote />
+                            Edit
+                          </Button>
+
+                          <Button
+                            size='sm'
+                            colorPalette={blog.published ? 'yellow' : 'red'}
+                            onClick={() => handleDeleteConfirm(blog)}
+                          >
+                            {blog.published ? (
+                              <GoCloudOffline />
+                            ) : (
+                              <BsCloudUpload />
+                            )}
+                            {blog.published ? 'Take Offline' : 'Go Live'}
+                          </Button>
+                        </HStack>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                )}
+              </Table.Body>
+            </Table.Root>
+          </Box>
 
           {/* Pagination */}
           <HStack p={4} spacing={4} justify='center'>
