@@ -21,6 +21,7 @@ import {
   Icon,
   Switch,
 } from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode, useColorModeValue } from './color-mode';
 import { GoSun, GoMoon } from 'react-icons/go';
@@ -30,7 +31,18 @@ const Appbar = () => {
   const navigate = useNavigate();
   const textColor = useColorModeValue('black', 'white');
   const buttonSpacing = useBreakpointValue({ base: '2', md: '4' });
+  const [authToken, setAuthToken] = useState(null);
+  useEffect(() => {
+    const token = localStorage.getItem('p73SessionData');
+    setAuthToken(token);
+  }, []);
 
+  const handleLogout = () => {
+    // Remove the token from localStorage
+    localStorage.removeItem('p73SessionData');
+    setAuthToken(null); // Update the state to reflect logout
+    navigate('/Signin'); // Redirect to the SignIn page after logout
+  };
   return (
     <Box
       as='nav'
@@ -125,12 +137,16 @@ const Appbar = () => {
             </MenuTrigger>
 
             <MenuContent position='absolute' zIndex='999' top='100%' left='90%'>
-              <MenuItem value='Admin' onClick={() => navigate('/Signin')}>
-                Admin
-              </MenuItem>
-              <MenuItem value='AddPost' onClick={() => navigate('/Editor')}>
-                Add Post
-              </MenuItem>
+              {authToken ? (
+                <MenuItem value='Admin' onClick={handleLogout}>
+                  {' '}
+                  Log Out
+                </MenuItem>
+              ) : (
+                <MenuItem value='Admin' onClick={() => navigate('/Signin')}>
+                  Sign In
+                </MenuItem>
+              )}
             </MenuContent>
           </MenuRoot>
         </Flex>
@@ -165,12 +181,15 @@ const Appbar = () => {
               >
                 Home
               </Button>
-              <Button w='100%' mb={4} onClick={() => navigate('/Signin')}>
-                Admin
-              </Button>
-              <Button w='100%' mb={4} onClick={() => navigate('/Editor')}>
-                Add Post
-              </Button>
+              {authToken ? (
+                <Button w='100%' mb={4} onClick={handleLogout}>
+                  Log Out
+                </Button>
+              ) : (
+                <Button w='100%' mb={4} onClick={() => navigate('/Signin')}>
+                  Sign In
+                </Button>
+              )}
               <Button w='100%' mb={4} onClick={toggleColorMode}>
                 {colorMode === 'light' ? <GoSun /> : <GoMoon />}
               </Button>

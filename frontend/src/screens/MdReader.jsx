@@ -73,11 +73,8 @@ const ReadBlog = () => {
 
         // Parse the markdown content to extract headers for TOC
         if (data.markdownContent) {
-          const { headings, htmlContent } = await extractHeaders(
-            data.markdownContent
-          );
+          const { headings } = await extractHeaders(data.markdownContent);
           setToc(headings);
-          console.log(htmlContent);
         }
       } catch (error) {
         console.error('Failed to fetch blog data:', error);
@@ -475,7 +472,7 @@ const ReadBlog = () => {
                 boxShadow='md'
                 bg={headerBgColor}
                 height='fit-content'
-                maxHeight='calc(100vh - 100px)'
+                //maxHeight='calc(100vh - 100px)'
                 overflowY='auto'
                 alignSelf='flex-start'
               >

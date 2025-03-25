@@ -80,7 +80,7 @@ const Signin = () => {
               colorScheme='blue'
               width='full'
               onClick={handleSignin}
-              isLoading={loading}
+              loading={loading}
             >
               Sign In
             </Button>

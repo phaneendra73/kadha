@@ -352,7 +352,7 @@ blogRoutes.get('/get/:id', async (c) => {
 		if (!blog) {
 			return c.json({ error: 'Blog not found' }, 404);
 		}
-		console.log(blog);
+
 		// Format the response with blog data
 		const blogWithMarkdown = {
 			id: blog.id,

@@ -213,7 +213,7 @@ export default function TagManager() {
                     />
                     <Button
                       colorScheme='blue'
-                      isLoading={isSubmitting}
+                      loading={isSubmitting}
                       onClick={handleAddTag}
                       minW='100px'
                     >
@@ -326,7 +326,7 @@ export default function TagManager() {
                   <Button
                     colorScheme='red'
                     onClick={handleDeleteTag}
-                    isLoading={isSubmitting}
+                    loading={isSubmitting}
                   >
                     Delete
                   </Button>

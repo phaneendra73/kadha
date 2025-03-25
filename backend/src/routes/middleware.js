@@ -22,7 +22,6 @@ export const authenticateUser = async (c, next) => {
 	}
 
 	const token = authHeader.split(' ')[1];
-	console.log(token);
 	try {
 		const user = await verify(token, c.env.JWT_SECRET);
 		if (user) {

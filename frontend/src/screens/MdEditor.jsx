@@ -374,7 +374,7 @@ export default function MdEditor() {
                 <Button
                   colorScheme='blue'
                   onClick={handleSubmit}
-                  isLoading={isSubmitting}
+                  loading={isSubmitting}
                   loadingText='Submitting'
                   width={{ base: '48%', sm: 'auto' }}
                 >
