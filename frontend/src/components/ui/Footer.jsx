@@ -58,8 +58,8 @@ const Footer = () => {
             borderColor={iconColor}
             color={iconColor}
             _hover={{
-              borderColor: 'gray.500',
-              backgroundColor: 'gray.500',
+              borderColor: color,
+              backgroundColor: color,
               color: buttonColor,
             }}
             onClick={toggleColorMode}

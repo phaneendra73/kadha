@@ -138,10 +138,16 @@ const Appbar = () => {
 
             <MenuContent position='absolute' zIndex='999' top='100%' left='90%'>
               {authToken ? (
-                <MenuItem value='Admin' onClick={handleLogout}>
-                  {' '}
-                  Log Out
-                </MenuItem>
+                <>
+                  <MenuItem value='Admin' onClick={() => navigate('/Admin')}>
+                    {' '}
+                    Admin
+                  </MenuItem>
+                  <MenuItem value='Login' onClick={handleLogout}>
+                    {' '}
+                    Log Out
+                  </MenuItem>
+                </>
               ) : (
                 <MenuItem value='Admin' onClick={() => navigate('/Signin')}>
                   Sign In
@@ -182,9 +188,14 @@ const Appbar = () => {
                 Home
               </Button>
               {authToken ? (
-                <Button w='100%' mb={4} onClick={handleLogout}>
-                  Log Out
-                </Button>
+                <>
+                  <Button w='100%' mb={4} onClick={() => navigate('/Admin')}>
+                    Admin
+                  </Button>
+                  <Button w='100%' mb={4} onClick={handleLogout}>
+                    Log Out
+                  </Button>
+                </>
               ) : (
                 <Button w='100%' mb={4} onClick={() => navigate('/Signin')}>
                   Sign In
