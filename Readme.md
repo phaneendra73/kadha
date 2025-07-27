@@ -3,7 +3,7 @@
 
 **Kadha** is a minimalist blog writing platform built using **React** and **Prisma**. This project helped me understand how Prisma works with modern front-end frameworks. Users can write and save markdown-based blog posts in a clean, distraction-free UI.
 
-🔗 **Live Demo**: [https://kadha.onrender.com](https://kadha.onrender.com)
+🔗 **Live Demo**: [https://kadha.onrender.com](https://phaneendra73.github.io/kadha)
 📂 **Repository**: [github.com/phaneendra73/kadha](https://github.com/phaneendra73/kadha)
 
 ---
@@ -22,8 +22,8 @@
 
 * **React** (Frontend)
 * **Prisma** (ORM for DB interactions)
-* **Express / Node.js** (Backend)
-* **SQLite** or **PostgreSQL** (Database)
+* **Hono / Node.js** (Backend)
+* **PostgreSQL** (Database)
 * **Markdown rendering**
 
 ---
