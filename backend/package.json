@@ -16,7 +16,7 @@
 		"@prisma/extension-accelerate": "^1.2.2",
 		"hono": "^4.10.3",
 		"install": "^0.13.0",
-		"npm": "^11.1.0",
+		"npm": "^11.12.0",
 		"prisma": "^6.4.1"
 	}
 }
